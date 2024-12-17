@@ -11,46 +11,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build and analyze
+  build-and-test:
+    name: Build, Test, and Analyze
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/setup/gradle
+          submodules: recursive
+
+      - name: Setup Gradle
+        uses: ./.github/actions/setup/gradle
+
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
+          key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-      - name: Build and analyze
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build, Test, and Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info
+        run: ./gradlew build sonar --info --no-daemon --debug --max-workers 2
 
-  test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Upload Test Results
+        if: failure() && (github.event_name == 'pull_request' || github.event_name == 'push')
+        uses: actions/upload-artifact@v3
         with:
-          submodules: recursive
-          fetch-depth: 0
-      - uses: ./.github/actions/setup/gradle
-      - name: Build with Gradle
-        run: ./gradlew test --no-daemon --debug --max-workers 2
+          name: test-results-${{ matrix.os }}
+          path: "**/build/test-results/**/*.xml"
