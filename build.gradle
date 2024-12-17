@@ -1,0 +1,117 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.15.0'
+    id 'org.sonarqube' version '6.0.1.5171'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies { 
+    implementation libs.springContext
+    implementation libs.slf4jApi
+    testImplementation libs.slf4jSimple
+    testImplementation libs.junitJupiterEngine
+    testImplementation libs.junitJupiterApi
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+tasks.withType(Jar) {
+    archiveBaseName.set(project.name)
+    archiveVersion.set(project.version)
+}
+
+jar {
+    manifest {
+        attributes(
+            'Build-Timestamp' : new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSSZ"),
+            'Build-Revision'  : project.version,
+            'Built-By'        : 'Sysr',
+            'Created-By'      : "Gradle ${gradle.gradleVersion}",
+            'Build-Jdk'       : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+        )
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "springcontext-env"
+        property "sonar.projectName", "Spring Context Environment Loader"
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+            description = project.description
+
+            from components.java
+
+            pom {
+                name = project.name
+                description = project.description
+                url = 'https://github.com/sysrio/springcontext-env'
+                inceptionYear = '2024'
+                licenses {
+                    license {
+                        name = 'Artistic License 2.0'
+                        url = 'https://spdx.org/licenses/Artistic-2.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'calvnce'
+                        name = 'Calvince Otieno'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/sysrio/springcontext-env.git'
+                    developerConnection = 'scm:git:ssh://github.com/sysrio/springcontext-env.git'
+                    url = 'http://github.com/sysrio/springcontext-env'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            /* Portal Publisher API*/
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('target/staging-deploy')
+                }
+            }
+        }
+    }
+    gitRootSearch = true
+    strict = true
+}
