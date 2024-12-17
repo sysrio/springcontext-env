@@ -20,3 +20,6 @@ build
 
 # Ignore Visual studio project-specific cache directory
 .vscode
+
+# Sonar lint setup dir
+.sonarlint

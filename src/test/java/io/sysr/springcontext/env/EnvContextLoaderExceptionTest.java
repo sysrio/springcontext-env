@@ -1,23 +1,31 @@
 package io.sysr.springcontext.env;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
 import io.sysr.springcontext.env.exception.EnvContextLoaderException;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
 
-public class EnvContextLoaderExceptionTest {
+class EnvContextLoaderExceptionTest {
 
     @Test
-    public void testExceptionWithMessage() {
+    void testExceptionWithMessage() {
         EnvContextLoaderException exception = new EnvContextLoaderException("Error loading environment");
         assertNotNull(exception);
         assertEquals("Error loading environment", exception.getMessage());
     }
 
     @Test
-    public void testExceptionWithMessageAndCause() {
+    void testExceptionWithMessageAndCause() {
         Throwable cause = new Throwable("Root cause");
         EnvContextLoaderException exception = new EnvContextLoaderException("Error loading environment", cause);
         assertNotNull(exception);
@@ -26,14 +34,14 @@ public class EnvContextLoaderExceptionTest {
     }
 
     @Test
-    public void testExceptionWithNullMessage() {
+    void testExceptionWithNullMessage() {
         @SuppressWarnings("null")
         EnvContextLoaderException exception = new EnvContextLoaderException(null);
         assertNull(exception.getMessage());
     }
 
     @Test
-    public void testExceptionWithNullCause() {
+    void testExceptionWithNullCause() {
         EnvContextLoaderException exception = new EnvContextLoaderException("Error loading environment", null);
         assertNotNull(exception);
         assertEquals("Error loading environment", exception.getMessage());
@@ -41,7 +49,7 @@ public class EnvContextLoaderExceptionTest {
     }
 
     @Test
-    public void testExceptionWithNullMessageAndCause() {
+    void testExceptionWithNullMessageAndCause() {
         @SuppressWarnings("null")
         EnvContextLoaderException exception = new EnvContextLoaderException(null, null);
         assertNull(exception.getMessage());
@@ -49,7 +57,7 @@ public class EnvContextLoaderExceptionTest {
     }
 
     @Test
-    public void testExceptionWithSuppressedExceptions() {
+    void testExceptionWithSuppressedExceptions() {
         EnvContextLoaderException exception = new EnvContextLoaderException("Error loading environment");
         exception.addSuppressed(new IllegalArgumentException("Suppressed exception"));
         assertEquals(1, exception.getSuppressed().length);
@@ -57,7 +65,7 @@ public class EnvContextLoaderExceptionTest {
     }
 
     @Test
-    public void testExceptionStackTraceNotEmpty() {
+    void testExceptionStackTraceNotEmpty() {
         EnvContextLoaderException exception = new EnvContextLoaderException("Error");
         StackTraceElement[] stackTrace = exception.getStackTrace();
         assertNotNull(stackTrace);
@@ -65,7 +73,7 @@ public class EnvContextLoaderExceptionTest {
     }
 
     @Test
-    public void testExceptionIsSerializable() throws IOException, ClassNotFoundException {
+    void testExceptionIsSerializable() throws IOException, ClassNotFoundException {
         EnvContextLoaderException exception = new EnvContextLoaderException("Error loading environment");
         // Serialize the exception
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
