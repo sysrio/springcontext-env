@@ -48,8 +48,9 @@ jar {
 
 sonar {
     properties {
-        property "sonar.projectKey", "springcontext-env"
-        property "sonar.projectName", "Spring Context Environment Loader"
+        property "sonar.projectKey", "sysrio_springcontext-env"
+        property "sonar.organization", "sysrio"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 
