@@ -32,7 +32,7 @@ public class EnvContextLoader {
     private static final Logger logger = LoggerFactory.getLogger(EnvContextLoader.class);
     private final ConcurrentHashMap<String, String> propertiesMap = new ConcurrentHashMap<>();
     private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
-    private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("^.*\\$\\{([^}]+)}$");
+    private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("^.*?\\$\\{([^}]+)}$");
     private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern
             .compile("^(\\$\\{[^}]*|\\$?\\w+|\\$\\{\\})\\}$");
 
