@@ -1,7 +1,6 @@
 package io.sysr.springcontext.env;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -205,10 +203,12 @@ public class EnvContextLoader {
 
     private String getEnvConfigurationFilePath() {
         URL resourceUrl = getClass().getClassLoader().getResource("env.properties");
-        String path = resourceUrl.getPath();
-        if (Objects.nonNull(path)) {
-            logger.info("Found env configuration file in {}", path);
-            return path;
+        if (Objects.nonNull(resourceUrl)) {
+            String path = resourceUrl.getPath();
+            if (Objects.nonNull(path)) {
+                logger.info("Found env configuration file in {}", path);
+                return path;
+            }
         }
         logger.warn("env.properties not found in any 'resources' directory in the classpath");
         return null;
