@@ -2,6 +2,7 @@
 spring = "6.2.1"
 slf4j = "2.0.16"
 junitJupiter = "5.11.3"
+assertj = "3.26.3"
 
 [libraries]
 springContext = {module = "org.springframework:spring-context", version.ref = "spring" }
@@ -10,7 +11,8 @@ junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter", version.ref = "j
 
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
 
+assertjCore = {module = "org.assertj:assertj-core", version.ref = "assertj"}
+
 slf4jApi = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 
 slf4jSimple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
-
