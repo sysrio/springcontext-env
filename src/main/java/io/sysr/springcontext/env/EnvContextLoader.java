@@ -203,17 +203,12 @@ public class EnvContextLoader {
         return isResolved;
     }
 
-    private String getEnvConfigurationFilePath() throws IOException {
-        Enumeration<URL> resources = getClass().getClassLoader().getResources("");
-        while (resources.hasMoreElements()) {
-            URL resourceUrl = resources.nextElement();
-            File directory = new File(resourceUrl.getPath(), "resources");
-            if (directory.exists() && directory.isDirectory()) {
-                File[] files = directory.listFiles((dir, name) -> name.equals("env.properties"));
-                if (files != null && files.length > 0) {
-                    return files[0].getAbsolutePath();
-                }
-            }
+    private String getEnvConfigurationFilePath() {
+        URL resourceUrl = getClass().getClassLoader().getResource("env.properties");
+        String path = resourceUrl.getPath();
+        if (Objects.nonNull(path)) {
+            logger.info("Found env configuration file in {}", path);
+            return path;
         }
         logger.warn("env.properties not found in any 'resources' directory in the classpath");
         return null;
