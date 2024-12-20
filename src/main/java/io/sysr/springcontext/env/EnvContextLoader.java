@@ -2,6 +2,7 @@ package io.sysr.springcontext.env;
 
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -199,10 +200,10 @@ public class EnvContextLoader {
         return isResolved;
     }
 
-    private String getEnvConfigurationFilePath() {
-        URL resourceUrl = getClass().getResource("/");
+    private String getEnvConfigurationFilePath() throws URISyntaxException {
+        URL resourceUrl = getClass().getResource("");
         if (Objects.nonNull(resourceUrl)) {
-            Path path = Path.of(resourceUrl.getPath()).resolve("resources/env.properties");
+            Path path = Path.of(resourceUrl.toURI()).resolve("resources/env.properties");
             if (Objects.nonNull(path) && Files.exists(path)) {
                 return path.toString();
             }
