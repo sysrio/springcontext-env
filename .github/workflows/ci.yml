@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info --scan --no-daemon --debug --max-workers 2
+        run: ./gradlew clean build sonar --info --scan --no-daemon --debug --max-workers 2
 
       - name: Upload Test Results
         if: failure() && (github.event_name == 'pull_request' || github.event_name == 'push')
