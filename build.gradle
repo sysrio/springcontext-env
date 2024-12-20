@@ -16,6 +16,7 @@ dependencies {
     testImplementation libs.slf4jSimple
     testImplementation libs.junitJupiterEngine
     testImplementation libs.junitJupiterApi
+    testImplementation libs.assertjCore
 }
 
 test {
