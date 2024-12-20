@@ -1,7 +1,9 @@
 package io.sysr.springcontext.env;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -48,7 +50,7 @@ public class EnvContextLoader {
 
     public void load() {
         try {
-            String userProvidedFilePath = getEnvConfigurationFilePath();
+            String userProvidedFilePath = findEnvPropertiesFile();
 
             if (Objects.nonNull(userProvidedFilePath)) {
                 loadFromUserProvidedDirectory(userProvidedFilePath);
@@ -199,15 +201,33 @@ public class EnvContextLoader {
         return isResolved;
     }
 
-    private String getEnvConfigurationFilePath() {
-        URL resourceUrl = getClass().getResource("/");
+    private String findEnvPropertiesFile() throws URISyntaxException, IOException {
+        URL resourceUrl = getClass().getClassLoader().getResource("");
         if (Objects.nonNull(resourceUrl)) {
-            Path path = Path.of(resourceUrl.getPath()).resolve("resources/env.properties");
-            if (Objects.nonNull(path) && Files.exists(path)) {
-                return path.toString();
+            Path rootPath = Path.of(resourceUrl.toURI());
+            if (!Files.isDirectory(rootPath)) {
+                throw new EnvContextLoaderException("The classpath root is not a directory: %s".formatted(rootPath));
+            }
+
+            try (Stream<Path> paths = Files.walk(rootPath)) {
+                return paths
+                        .filter(Files::isRegularFile)
+                        .filter(file -> file.getFileName().toString().equals("env.properties"))
+                        .filter(file -> isPathWithinRoot(rootPath, file))
+                        .map(Path::toString)
+                        .findFirst()
+                        .orElse(null);
             }
         }
         logger.warn("env.properties not found in any 'resources' directory in the classpath");
         return null;
+    }
+
+    private boolean isPathWithinRoot(Path rootPath, Path file) {
+        // Normalize the paths before comparison to avoid issues with relative paths
+        // symbolic links, and avaoid traversal attacks
+        Path normalizedRootPath = rootPath.toAbsolutePath().normalize();
+        Path normalizedFilePath = file.toAbsolutePath().normalize();
+        return normalizedFilePath.startsWith(normalizedRootPath);
     }
 }
