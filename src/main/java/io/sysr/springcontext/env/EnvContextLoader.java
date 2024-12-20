@@ -38,8 +38,6 @@ public class EnvContextLoader {
         super();
         logger.trace("Spring context dot env loader initiated");
 
-        // Load the variables
-        load();
     }
 
     public Properties getLoadedProperties() {
@@ -48,7 +46,7 @@ public class EnvContextLoader {
         return props;
     }
 
-    private void load() {
+    public void load() {
         try {
             String userProvidedFilePath = getEnvConfigurationFilePath();
 
@@ -202,12 +200,11 @@ public class EnvContextLoader {
     }
 
     private String getEnvConfigurationFilePath() {
-        URL resourceUrl = getClass().getClassLoader().getResource("env.properties");
+        URL resourceUrl = getClass().getResource("/");
         if (Objects.nonNull(resourceUrl)) {
-            String path = resourceUrl.getPath();
-            if (Objects.nonNull(path)) {
-                logger.info("Found env configuration file in {}", path);
-                return path;
+            Path path = Path.of(resourceUrl.getPath()).resolve("resources/env.properties");
+            if (Objects.nonNull(path) && Files.exists(path)) {
+                return path.toString();
             }
         }
         logger.warn("env.properties not found in any 'resources' directory in the classpath");
