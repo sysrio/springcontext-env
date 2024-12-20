@@ -201,7 +201,7 @@ public class EnvContextLoader {
     }
 
     private String getEnvConfigurationFilePath() throws URISyntaxException {
-        URL resourceUrl = getClass().getResource("");
+        URL resourceUrl = getClass().getResource("/");
         if (Objects.nonNull(resourceUrl)) {
             Path path = Path.of(resourceUrl.toURI()).resolve("resources/env.properties");
             if (Objects.nonNull(path) && Files.exists(path)) {
