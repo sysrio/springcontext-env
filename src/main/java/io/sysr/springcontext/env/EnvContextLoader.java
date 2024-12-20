@@ -209,13 +209,15 @@ public class EnvContextLoader {
                 throw new EnvContextLoaderException("The classpath root is not a directory: %s".formatted(rootPath));
             }
 
-            return Files.walk(rootPath)
-                    .filter(Files::isRegularFile)
-                    .filter(file -> file.getFileName().toString().equals("env.properties"))
-                    .filter(file -> isPathWithinRoot(rootPath, file))
-                    .map(Path::toString)
-                    .findFirst()
-                    .orElse(null);
+            try (Stream<Path> paths = Files.walk(rootPath)) {
+                return paths
+                        .filter(Files::isRegularFile)
+                        .filter(file -> file.getFileName().toString().equals("env.properties"))
+                        .filter(file -> isPathWithinRoot(rootPath, file))
+                        .map(Path::toString)
+                        .findFirst()
+                        .orElse(null);
+            }
         }
         logger.warn("env.properties not found in any 'resources' directory in the classpath");
         return null;
