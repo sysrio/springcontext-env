@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,10 +33,10 @@ class EnvContextLoaderTest {
 
     @Test
     void whenEnvPropertiesFileExists_thenMethodReturnsPath() throws NoSuchMethodException, IllegalAccessException,
-            InvocationTargetException, SecurityException, IOException {
+            InvocationTargetException, SecurityException, IOException, URISyntaxException {
         // Get the root URL from the class loader
         URL url = EnvContextLoader.class.getClassLoader().getResource("");
-        Path root = Path.of(url.getPath());
+        Path root = Path.of(url.toURI());
 
         // Create the resources directory and env.properties file
         Path resourcesDirPath = root.resolve("resources");
@@ -60,10 +61,10 @@ class EnvContextLoaderTest {
 
     @Test
     void whenEnvPropertiesFileNotFound_thenMethodReturnsNull() throws NoSuchMethodException, IllegalAccessException,
-            InvocationTargetException, SecurityException {
+            InvocationTargetException, SecurityException, URISyntaxException {
         // Get the root URL from the class loader
         URL url = EnvContextLoader.class.getClassLoader().getResource("");
-        Path root = Path.of(url.getPath());
+        Path root = Path.of(url.toURI());
 
         // Ensure the env.properties file does not exist
         Path resourcesDirPath = root.resolve("resources");
