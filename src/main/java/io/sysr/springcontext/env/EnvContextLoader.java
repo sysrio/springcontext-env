@@ -39,7 +39,6 @@ public class EnvContextLoader {
     public EnvContextLoader() {
         super();
         logger.trace("Spring context dot env loader initiated");
-
     }
 
     public Properties getLoadedProperties() {
@@ -67,8 +66,8 @@ public class EnvContextLoader {
                 StandardCharsets.UTF_8)) {
             Properties props = new Properties();
             props.load(reader);
-            String directoryPath = Stream.of("BASE_DIR", "base_dir")
-                    .map(props::getProperty)
+            String directoryPath = Stream.of("BASE_DIR")
+                    .map(key -> props.getProperty(key.toUpperCase()))
                     .filter(Objects::nonNull)
                     .findFirst()
                     .orElse(null);
