@@ -1,7 +1,7 @@
 name: ci-lib
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     branches:
       - dev
@@ -25,6 +25,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Setup Gradle
         uses: ./.github/actions/setup/gradle
@@ -50,6 +52,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: ./gradlew clean build sonar --stacktrace --scan --no-daemon --debug --max-workers 2
 
       - name: Upload Test Results
