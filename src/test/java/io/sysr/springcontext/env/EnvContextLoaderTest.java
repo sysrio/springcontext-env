@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class EnvContextLoaderTest {
-    private static final String ENV_PROPERTIES_FILE_NAME = "env.properties";
+    private static final String ENV_PROPERTIES_CONFIG_FILE_NAME = "env.properties";
 
     @TempDir
     Path tempDir;
@@ -45,7 +45,7 @@ class EnvContextLoaderTest {
         // Create the resources directory and env.properties file
         Path resourcesDirPath = root.resolve("resources");
         Files.createDirectories(resourcesDirPath);
-        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_FILE_NAME);
+        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
         Files.createFile(envFile);
 
         try {
@@ -54,7 +54,7 @@ class EnvContextLoaderTest {
             method.setAccessible(true);
             String path = (String) method.invoke(envContextLoader);
 
-            assertThat(path).isNotNull().endsWith(ENV_PROPERTIES_FILE_NAME);
+            assertThat(path).isNotNull().endsWith(ENV_PROPERTIES_CONFIG_FILE_NAME);
             assertThat(new File(path)).exists().isFile();
             assertThat(path).isEqualTo(envFile.toString());
         } finally {
@@ -72,7 +72,7 @@ class EnvContextLoaderTest {
 
         // Ensure the env.properties file does not exist
         Path resourcesDirPath = root.resolve("resources");
-        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_FILE_NAME);
+        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
 
         if (Files.exists(envFile)) {
             fail("Test failed because env.properties file exists when it should not.");
@@ -102,9 +102,10 @@ class EnvContextLoaderTest {
         // Create the resources directory and env.properties file
         Path resourcesDirPath = root.resolve("resources");
         Files.createDirectories(resourcesDirPath);
-        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_FILE_NAME);
+        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
         Files.createFile(envFile);
-        Files.writeString(envFile, "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(userDir.toString(), filePath.toString()));
+        Files.writeString(envFile,
+                "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(userDir.toUri().getPath(), filePath.toFile().getName()));
 
         try {
             EnvContextLoader envContextLoader = new EnvContextLoader();
@@ -113,7 +114,7 @@ class EnvContextLoaderTest {
             findEnvPropertiesFileMethod.setAccessible(true);
             String path = (String) findEnvPropertiesFileMethod.invoke(envContextLoader);
 
-            assertThat(path).isNotNull().endsWith(ENV_PROPERTIES_FILE_NAME);
+            assertThat(path).isNotNull().endsWith(ENV_PROPERTIES_CONFIG_FILE_NAME);
             assertThat(new File(path)).exists().isFile();
             assertThat(path).isEqualTo(envFile.toString());
 
