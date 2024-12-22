@@ -103,11 +103,9 @@ class EnvContextLoaderTest {
         Path resourcesDirPath = root.resolve("resources");
         Files.createDirectories(resourcesDirPath);
         Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+        String baseDir = userDir.toAbsolutePath().toString().replace("\\", "/");
         Files.createFile(envFile);
-        Files.writeString(envFile,
-                "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(
-                        userDir.toAbsolutePath().toString(),
-                        filePath.getFileName().toString()));
+        Files.writeString(envFile, "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(baseDir, filePath.getFileName().toString()));
 
         try {
             EnvContextLoader envContextLoader = new EnvContextLoader();
