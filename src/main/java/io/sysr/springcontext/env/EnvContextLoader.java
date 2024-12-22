@@ -76,13 +76,14 @@ public class EnvContextLoader {
                 List<String> fileNameKeys = props.stringPropertyNames()
                         .stream().filter(key -> key.toUpperCase().startsWith("FILE"))
                         .toList();
-
+                logger.info(directoryPath);
                 for (String fileNameKey : fileNameKeys) {
                     String fileName = props.getProperty(fileNameKey);
                     Path path = Path.of(directoryPath).normalize().resolve(fileName).normalize();
                     File file = path.toFile();
+                    logger.info("{}", path);
                     if (file.exists() && file.isFile()) {
-                        parse(path);
+                        parse(path.toAbsolutePath());
                         logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
                     }
                 }
