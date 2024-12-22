@@ -1,7 +1,7 @@
 name: ci-lib
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     branches:
       - dev
@@ -25,6 +25,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Setup Gradle
         uses: ./.github/actions/setup/gradle
