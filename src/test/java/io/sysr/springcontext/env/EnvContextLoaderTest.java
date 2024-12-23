@@ -106,7 +106,7 @@ class EnvContextLoaderTest {
         Files.createFile(envFile);
         Files.writeString(envFile,
                 "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(
-                        userDir.toAbsolutePath().toString(),
+                        userDir.toString().replace("\\", "\\\\"),
                         filePath.getFileName().toString()));
 
         try {
