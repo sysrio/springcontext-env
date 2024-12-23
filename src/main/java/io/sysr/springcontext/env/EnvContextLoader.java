@@ -61,8 +61,9 @@ public class EnvContextLoader {
         }
     }
 
-    private void loadFromUserProvidedDirectory(String filePath) {
-        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(filePath)),
+    private void loadFromUserProvidedDirectory(String envPropertiesFilePath) {
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(
+                envPropertiesFilePath)),
                 StandardCharsets.UTF_8)) {
             Properties props = new Properties();
             props.load(reader);
@@ -87,7 +88,7 @@ public class EnvContextLoader {
                     }
                 }
             } else {
-                logger.warn("Neither BASE_DIR nor base_dir property found in the properties file - {}", filePath);
+                logger.warn("BASE_DIR not found in the properties file - {}", envPropertiesFilePath);
             }
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
