@@ -145,4 +145,52 @@ class EnvContextLoaderTest {
             Files.deleteIfExists(resourcesDirPath);
         }
     }
+
+    @Test
+    void whenUserProvidedInvalidPropertiesFilePath_thenNothingIsLoaded() throws URISyntaxException, IOException,
+            NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+
+        // Get the root URL from the class loader
+        URL url = EnvContextLoader.class.getClassLoader().getResource("");
+        Path root = Path.of(url.toURI());
+
+        // Create the resources directory and env.properties file
+        Path resourcesDirPath = root.resolve("resources");
+        Files.createDirectories(resourcesDirPath);
+        Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+        Files.createFile(envFile);
+        Files.writeString(envFile,
+                "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(
+                        tempDir.toString().replace("\\", "\\\\"),
+                        "nofile"));
+
+        try {
+            EnvContextLoader envContextLoader = new EnvContextLoader();
+            Method findEnvPropertiesFileMethod = EnvContextLoader.class.getDeclaredMethod("findEnvPropertiesFile");
+
+            findEnvPropertiesFileMethod.setAccessible(true);
+            String path = (String) findEnvPropertiesFileMethod.invoke(envContextLoader);
+
+            assertThat(path).isNotNull().endsWith(ENV_PROPERTIES_CONFIG_FILE_NAME);
+            assertThat(new File(path)).exists().isFile();
+            assertThat(path).isEqualTo(envFile.toString());
+
+            // Load file from user dir
+            Method loadFromUserDirMethod = EnvContextLoader.class.getDeclaredMethod(
+                    "loadFromUserProvidedDirectory",
+                    String.class);
+
+            loadFromUserDirMethod.setAccessible(true);
+            loadFromUserDirMethod.invoke(envContextLoader, path);
+
+            Properties props = envContextLoader.getLoadedProperties();
+            assertThat(props)
+                    .isNotNull()
+                    .isEmpty();
+
+        } finally {
+            Files.deleteIfExists(envFile);
+            Files.deleteIfExists(resourcesDirPath);
+        }
+    }
 }
