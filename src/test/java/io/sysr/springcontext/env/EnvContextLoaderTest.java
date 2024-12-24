@@ -219,4 +219,21 @@ class EnvContextLoaderTest {
             assertThat(props.getProperty("KEY"))
                     .isEqualTo("VALUE");
     }
+
+    @Test
+    void whenDefaultRootLoaderIsTriggeredAndEnvFileIsNotAvailable_thenNothingIsLoaded() throws
+                URISyntaxException, IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+                InvocationTargetException {
+        Path rootPath = Files.createDirectories(tempDir.resolve("springcontext-env"));
+
+        EnvContextLoader envContextLoader = new EnvContextLoader();
+        Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadFromDefaultRootDirectory", String.class);
+        loadFromDefaultRootDir.setAccessible(true);
+        loadFromDefaultRootDir.invoke(envContextLoader, rootPath.toAbsolutePath().toString());
+
+        Properties props = envContextLoader.getLoadedProperties();
+            assertThat(props)
+                    .isNotNull()
+                    .isEmpty();
+    }
 }
