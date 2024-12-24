@@ -193,4 +193,47 @@ class EnvContextLoaderTest {
             Files.deleteIfExists(resourcesDirPath);
         }
     }
+
+    @Test
+    void whenDefaultRootLoaderIsTriggeredAndEnvFileIsAvailable_thenTheFileContentMustBeLoadedSuccessfully() throws
+                URISyntaxException, IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+                InvocationTargetException {
+        Path rootPath = Files.createDirectories(tempDir.resolve("springcontext-env"));
+        Path envFile = Files.createFile(rootPath.resolve(".env"));
+        Files.writeString(envFile,"KEY=VALUE", StandardCharsets.UTF_8);
+
+        EnvContextLoader envContextLoader = new EnvContextLoader();
+        Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadFromDefaultRootDirectory", String.class);
+        loadFromDefaultRootDir.setAccessible(true);
+        loadFromDefaultRootDir.invoke(envContextLoader, rootPath.toAbsolutePath().toString());
+
+        Properties props = envContextLoader.getLoadedProperties();
+            assertThat(props)
+                    .isNotNull()
+                    .isNotEmpty()
+                    .hasSize(1);
+
+            assertThat(props.stringPropertyNames())
+                    .contains("KEY");
+
+            assertThat(props.getProperty("KEY"))
+                    .isEqualTo("VALUE");
+    }
+
+    @Test
+    void whenDefaultRootLoaderIsTriggeredAndEnvFileIsNotAvailable_thenNothingIsLoaded() throws
+                URISyntaxException, IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+                InvocationTargetException {
+        Path rootPath = Files.createDirectories(tempDir.resolve("springcontext-env"));
+
+        EnvContextLoader envContextLoader = new EnvContextLoader();
+        Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadFromDefaultRootDirectory", String.class);
+        loadFromDefaultRootDir.setAccessible(true);
+        loadFromDefaultRootDir.invoke(envContextLoader, rootPath.toAbsolutePath().toString());
+
+        Properties props = envContextLoader.getLoadedProperties();
+            assertThat(props)
+                    .isNotNull()
+                    .isEmpty();
+    }
 }
