@@ -196,7 +196,7 @@ class EnvContextLoaderTest {
 
     @Test
     void whenDefaultRootLoaderIsTriggeredAndEnvFileIsAvailable_thenTheFileContentMustBeLoadedSuccessfully() throws
-                URISyntaxException, IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+                IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
                 InvocationTargetException {
         Path rootPath = Files.createDirectories(tempDir.resolve("springcontext-env"));
         Path envFile = Files.createFile(rootPath.resolve(".env"));
@@ -222,7 +222,7 @@ class EnvContextLoaderTest {
 
     @Test
     void whenDefaultRootLoaderIsTriggeredAndEnvFileIsNotAvailable_thenNothingIsLoaded() throws
-                URISyntaxException, IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+                IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
                 InvocationTargetException {
         Path rootPath = Files.createDirectories(tempDir.resolve("springcontext-env"));
 
