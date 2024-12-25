@@ -1,7 +1,5 @@
 package io.sysr.springcontext.env.exception;
 
-import org.springframework.lang.NonNull;
-
 /**
  * Exception thrown when there is an error loading the environment variables
  * from a dotenv file in a Spring application. This exception extends
@@ -39,7 +37,7 @@ public class EnvContextLoaderException extends RuntimeException {
      * @param message the detail message, saved for later retrieval by the
      *                {@link #getMessage()} method.
      */
-    public EnvContextLoaderException(@NonNull String message) {
+    public EnvContextLoaderException(String message) {
         super(message);
     }
 
@@ -52,7 +50,7 @@ public class EnvContextLoaderException extends RuntimeException {
      * @param cause   the underlying cause of the exception,
      *                saved for later retrieval by the {@link #getCause()} method.
      */
-    public EnvContextLoaderException(@NonNull String message, Throwable cause) {
+    public EnvContextLoaderException(String message, Throwable cause) {
         super(message, cause);
     }
 }
