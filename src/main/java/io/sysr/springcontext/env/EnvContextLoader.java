@@ -32,9 +32,9 @@ public class EnvContextLoader {
     private static final Logger logger = LoggerFactory.getLogger(EnvContextLoader.class);
     private final ConcurrentHashMap<String, String> propertiesMap = new ConcurrentHashMap<>();
     private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
-    private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("^.*?\\$\\{([^}]+)}$");
-    private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern
-            .compile("^(\\$\\{[^}]*|\\$?\\w+|\\$\\{\\})\\}$");
+    private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{([^}]+)}");
+    private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_-]*$");
+    private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{\\s*\\}$|\\$\\{[^}]*$|\\$\\{$");
 
     public EnvContextLoader() {
         super();
@@ -115,7 +115,7 @@ public class EnvContextLoader {
             props.load(reader);
             for (String key : props.stringPropertyNames()) {
                 String value = getResolvedValue(props, key);
-                if (Objects.nonNull(value)) {
+                if (Objects.nonNull(value) && !value.isBlank()) {
                     propertiesMap.put(key.strip(), value.strip());
                 }
             }
@@ -129,47 +129,51 @@ public class EnvContextLoader {
         Set<String> resolving = new HashSet<>();
         Deque<String> stack = new ArrayDeque<>();
 
+        // If the variable name in the env properties file is invalid then stop further
+        // actions and return immediately.
+        if (!isValidVariableName(key)) {
+            logger.warn("The variable name: {} is considered invalid. Please double check.", key);
+            return null;
+        }
+
         // Push key to the stack
         stack.push(key);
 
         // Resolve the value of the variable marked by key
         while (!stack.isEmpty()) {
             String name = stack.peek();
-            String value = props.getProperty(name);
+            // When a variable value defined use its value
+            // otherwise, fall back to the system property with the same name.
+            String value = Objects.nonNull(props.getProperty(name)) ? props.getProperty(name)
+                    : System.getProperty(name);
 
             if (Objects.isNull(value)) {
-                // check environment variable
-                value = System.getProperty(name);
-                if (Objects.isNull(value)) {
-                    logger.warn("The definition of the env variable {} is not found!", name);
-                    logger.warn("Variable {} resolution is skipped.", name);
-                    // Remove this variable name form the queue
+                logger.warn("The definition of the env variable {} is not found!", name);
+                // We cannot resolve this variable
+                return null;
+            }
+
+            // Check if the value is valid
+            Matcher badVariable = BAD_VARIABLE_PATTERN_MATCHER.matcher(value);
+            if (badVariable.matches()) {
+                logger.warn("The variable definition {}={} is considered invalid. Please double check.", name, value);
+                // We cannot proceed further, this variable will not be resolved
+                return null;
+            } else {
+                // Add variable name to resolving set
+                resolving.add(name);
+
+                // Iteratively resolve the variable value
+                Matcher variableMatcher = VARIABLE_PATTERN_MATCHER.matcher(value);
+                StringBuilder sb = new StringBuilder();
+                boolean isResolved = resolve(resolving, resolved, stack, variableMatcher, sb);
+
+                if (isResolved) {
+                    variableMatcher.appendTail(sb);
+                    resolved.put(name, sb.toString());
+                    resolving.remove(name);
                     stack.pop();
                 }
-            }
-
-            // Check if the value is valid one
-            Matcher badVariable = BAD_VARIABLE_PATTERN_MATCHER.matcher(value);
-            if (badVariable.find()) {
-                logger.warn("The variable definition {}={} is considered invalid. Please double check.", name, value);
-                logger.warn("Variable {} resolution is skipped.", name);
-                // Remove this variable name form the queue
-                stack.pop();
-            }
-
-            // Add variable name to resolving set
-            resolving.add(name);
-
-            // Iteratively resolve the variable value
-            Matcher variableMatcher = VARIABLE_PATTERN_MATCHER.matcher(value);
-            StringBuilder sb = new StringBuilder();
-            boolean isResolved = resolve(resolving, resolved, stack, variableMatcher, sb);
-
-            if (isResolved) {
-                variableMatcher.appendTail(sb);
-                resolved.put(name, sb.toString());
-                resolving.remove(name);
-                stack.pop();
             }
         }
         return resolved.get(key);
@@ -182,7 +186,6 @@ public class EnvContextLoader {
 
         while (variableMatcher.find()) {
             String name = variableMatcher.group(1);
-
             if (resolving.contains(name)) {
                 throw new EnvContextLoaderException("Circular dependency detected on variable %s.".formatted(name));
             }
@@ -229,5 +232,10 @@ public class EnvContextLoader {
         Path normalizedRootPath = rootPath.toAbsolutePath().normalize();
         Path normalizedFilePath = file.toAbsolutePath().normalize();
         return normalizedFilePath.startsWith(normalizedRootPath);
+    }
+
+    public boolean isValidVariableName(String variableName) {
+        Matcher matcher = VARIABLE_NAME_PATTERN.matcher(variableName);
+        return matcher.matches();
     }
 }
