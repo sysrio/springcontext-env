@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies { 
-    implementation libs.springContext
+    implementation libs.springBootCore
     implementation libs.slf4jApi
     testImplementation libs.slf4jSimple
     testImplementation libs.junitJupiterEngine

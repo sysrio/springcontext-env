@@ -3,9 +3,11 @@ spring = "6.2.1"
 slf4j = "2.0.16"
 junitJupiter = "5.11.3"
 assertj = "3.26.3"
+springBoot = "3.4.1"
+
 
 [libraries]
-springContext = {module = "org.springframework:spring-context", version.ref = "spring" }
+springBootCore = {module = "org.springframework.boot:spring-boot", version.ref = "springBoot" }
 
 junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 
