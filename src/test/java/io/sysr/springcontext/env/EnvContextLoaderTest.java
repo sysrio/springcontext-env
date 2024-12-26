@@ -64,7 +64,6 @@ class EnvContextLoaderTest {
                         assertThat(path).isEqualTo(envFile.toString());
                 } finally {
                         Files.deleteIfExists(envFile);
-                        Files.deleteIfExists(resourcesDirPath);
                 }
         }
 
@@ -142,7 +141,6 @@ class EnvContextLoaderTest {
 
                 } finally {
                         Files.deleteIfExists(envFile);
-                        Files.deleteIfExists(resourcesDirPath);
                 }
         }
 
@@ -188,7 +186,6 @@ class EnvContextLoaderTest {
 
                 } finally {
                         Files.deleteIfExists(envFile);
-                        Files.deleteIfExists(resourcesDirPath);
                 }
         }
 
