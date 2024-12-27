@@ -9,25 +9,24 @@ package io.sysr.springcontext.env.exception;
  *
  * <p>
  * Using this exception helps to pinpoint issues related to the application
- * context
- * not being properly configured due to missing or misconfigured environment
- * variables.
+ * context not being properly configured due to missing or misconfigured
+ * environment variables.
  * </p>
  *
  * <p>
- * Example usage:
+ * <b> Example usage: </b>
  * </p>
  * 
  * <pre>
  * try {
- *     // Code that loads environment variables
+ *     // Some code
  * } catch (IOException e) {
  *     throw new EnvContextLoaderException("Failed to load environment variables", e);
  * }
  * </pre>
  *
  * @author Calvince Otieno
- * @version 1.0
+ * @version 1.0.0
  * @since 2024
  */
 public class EnvContextLoaderException extends RuntimeException {

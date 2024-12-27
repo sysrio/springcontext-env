@@ -28,25 +28,86 @@ import org.slf4j.LoggerFactory;
 
 import io.sysr.springcontext.env.exception.EnvContextLoaderException;
 
+/**
+ * The {@code EnvContextLoader} class is responsible for loading environment
+ * variables from <code>.env</code> files or an <code>env.properties</code> file
+ * into a properties map.
+ * It handles variable resolution, including nested variables, validates
+ * variable names and detects circular dependencies.
+ *
+ * <p>
+ * <b> Example usage: </b>
+ * </p>
+ * 
+ * <pre>{@code
+ * // Create an instance of the loader
+ * EnvContextLoader loader = new EnvContextLoader();
+ *
+ * // Load environment variables
+ * loader.load();
+ *
+ * // Retrieve the loaded properties
+ * Properties properties = loader.getLoadedProperties();
+ *
+ * // Access a property
+ * String dbUrl = properties.getProperty("DATABASE_URL");
+ * }</pre>
+ *
+ * <p>
+ * <b>Note:</b> Ensure that the dotenv properties configuration file
+ * (<b>env.properties</b>) is placed in the resources foler. This only applies
+ * if you have the <b>.env</b> file that contains the environment declarions is
+ * placed in a custom location.
+ * </p>
+ *
+ * @author Calvince Otieno
+ * @version 1.0.0
+ * @since 2024
+ */
 public class EnvContextLoader {
     private static final Logger logger = LoggerFactory.getLogger(EnvContextLoader.class);
+    /**
+     * A concurrent map storing all loaded and resolved environment properties.
+     */
     private final ConcurrentHashMap<String, String> propertiesMap = new ConcurrentHashMap<>();
+
     private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
     private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{([^}]+)}");
     private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_-]*$");
     private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{\\s*\\}$|\\$\\{[^}]*$|\\$\\{$");
 
+    /**
+     * Constructs a new {@code EnvContextLoader} instance.
+     */
     public EnvContextLoader() {
         super();
-        logger.trace("Spring context dot env loader initiated");
+        logger.trace("Spring context dotenv loader initiated");
     }
 
+    /**
+     * Retrieves the loaded properties as a {@link java.util.Properties} object.
+     *
+     * @return The {@link Properties} object containing all loaded and resolved
+     *         environment variables.
+     */
     public Properties getLoadedProperties() {
         Properties props = new Properties();
         propertiesMap.entrySet().forEach(entry -> props.put(entry.getKey(), entry.getValue()));
         return props;
     }
 
+    /**
+     * Initiates the loading process of environment variables.
+     *
+     * <p>
+     * It attempts to load variables from a user-provided file which is specified in
+     * the <code>env.properties</code> file or from <code>.env</code> files in the
+     * default root directory.
+     * </p>
+     *
+     * @throws EnvContextLoaderException if there is any error during the loading
+     *                                   process.
+     */
     public void load() {
         try {
             String userProvidedFilePath = findEnvPropertiesFile();
@@ -61,6 +122,20 @@ public class EnvContextLoader {
         }
     }
 
+    /**
+     * Loads environment variables from a user-provided <code>.env</code>
+     * files.
+     *
+     * <p>
+     * Reads the <code>BASE_DIR</code> and locates the files specified by the
+     * <code>FILE*</code> properties to locate and load <code>.env</code> files.
+     * </p>
+     *
+     * @param envPropertiesFilePath The file path to the <code>env.properties</code>
+     *                              file provided by the user.
+     * @throws EnvContextLoaderException if there is an error reading the properties
+     *                                   or loading the files.
+     */
     private void loadFromUserProvidedDirectory(String envPropertiesFilePath) {
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(
                 envPropertiesFilePath)),
@@ -95,6 +170,14 @@ public class EnvContextLoader {
         }
     }
 
+    /**
+     * Loads <code>.env</code> files from the default root directory.
+     *
+     * @param filePath The root directory path where <code>.env</code> files are
+     *                 located.
+     * @throws EnvContextLoaderException if there is an error reading the directory
+     *                                   or loading the files.
+     */
     private void loadFromDefaultRootDirectory(String filePath) {
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Path.of(filePath))) {
             for (Path path : directoryStream) {
@@ -109,6 +192,14 @@ public class EnvContextLoader {
         }
     }
 
+    /**
+     * Parses a <code>.env</code> file and resolves the environment variables within
+     * it.
+     *
+     * @param path The path to the <code>.env</code> file to be parsed.
+     * @throws EnvContextLoaderException if there is an error reading or parsing the
+     *                                   file.
+     */
     private void parse(Path path) {
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)) {
             Properties props = new Properties();
@@ -124,6 +215,17 @@ public class EnvContextLoader {
         }
     }
 
+    /**
+     * Resolves the value of a given environment variable, handling nested variables
+     * and detecting circular dependencies.
+     *
+     * @param props The {@link Properties} object containing the environment
+     *              variables.
+     * @param key   The name of the variable to resolve.
+     * @return The resolved value of the variable, or {@code null} if it cannot be
+     *         resolved.
+     * @throws EnvContextLoaderException if a circular dependency is detected.
+     */
     private String getResolvedValue(Properties props, String key) {
         Map<String, String> resolved = new HashMap<>();
         Set<String> resolving = new HashSet<>();
@@ -179,6 +281,20 @@ public class EnvContextLoader {
         return resolved.get(key);
     }
 
+    /**
+     * Helper method to iteratively resolve a variable's value.
+     *
+     * @param resolving       A set of variable names currently being resolved.
+     * @param resolved        A map of already resolved variables and their values.
+     * @param stack           A stack used for depth-first resolution of variables.
+     * @param variableMatcher A {@link Matcher} object to find variable patterns in
+     *                        the values.
+     * @param sb              A {@link StringBuilder} to construct the resolved
+     *                        value.
+     * @return {@code true} if the variable was successfully resolved, {@code false}
+     *         if further resolution is needed.
+     * @throws EnvContextLoaderException if a circular dependency is detected.
+     */
     private boolean resolve(Set<String> resolving, Map<String, String> resolved, Deque<String> stack,
             Matcher variableMatcher, StringBuilder sb) {
 
@@ -204,10 +320,22 @@ public class EnvContextLoader {
         return isResolved;
     }
 
+    /**
+     * Searches for the <code>env.properties</code> file within the classpath
+     * resources.
+     *
+     * @return The path to the <code>env.properties</code> file if found, or
+     *         {@code null} if not found.
+     * @throws URISyntaxException        If the resource URL syntax is incorrect.
+     * @throws IOException               If an I/O error occurs accessing the file
+     *                                   system.
+     * @throws EnvContextLoaderException If the classpath root is not a directory.
+     */
     private String findEnvPropertiesFile() throws URISyntaxException, IOException {
         URL resourceUrl = getClass().getClassLoader().getResource("");
         if (Objects.nonNull(resourceUrl)) {
             Path rootPath = Path.of(resourceUrl.toURI());
+
             if (!Files.isDirectory(rootPath)) {
                 throw new EnvContextLoaderException("The classpath root is not a directory: %s".formatted(rootPath));
             }
@@ -226,15 +354,30 @@ public class EnvContextLoader {
         return null;
     }
 
+    /**
+     * Checks if a given file path is within the specified root directory to prevent
+     * directory traversal attacks.
+     *
+     * @param rootPath The root path to check against.
+     * @param file     The file path to verify.
+     * @return {@code true} if the file is within the root directory, {@code false}
+     *         otherwise.
+     */
     private boolean isPathWithinRoot(Path rootPath, Path file) {
-        // Normalize the paths before comparison to avoid issues with relative paths
-        // symbolic links, and avaoid traversal attacks
         Path normalizedRootPath = rootPath.toAbsolutePath().normalize();
         Path normalizedFilePath = file.toAbsolutePath().normalize();
         return normalizedFilePath.startsWith(normalizedRootPath);
     }
 
-    public boolean isValidVariableName(String variableName) {
+    /**
+     * Validates if a variable name adheres to the allowed pattern, which starts
+     * with a letter or underscore, followed by letters, digits, underscores, or
+     * hyphens.
+     *
+     * @param variableName The name of the variable to validate.
+     * @return {@code true} if the variable name is valid, {@code false} otherwise.
+     */
+    private boolean isValidVariableName(String variableName) {
         Matcher matcher = VARIABLE_NAME_PATTERN.matcher(variableName);
         return matcher.matches();
     }
