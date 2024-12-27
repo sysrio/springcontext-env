@@ -225,15 +225,15 @@ class EnvContextLoaderTest {
         @Test
         void whenEnvFileWithMultipleKeyValuesIsProvided_thenTheKeyValuePairsMustBeLoadedSuccessfully()
                         throws IOException {
-                String content = "KEY1=VALUE1\nKEY2=VALUE2\nKEY3=VALUE3";
+                String content = "KEY1=VALUE1\nKEY2==VALUE2\nKEY3:VALUE3\nDESC=Some description";
                 Files.writeString(tempDir.resolve(".env"), content, StandardCharsets.UTF_8);
 
                 envContextLoader.load();
                 Properties props = envContextLoader.getLoadedProperties();
 
-                assertThat(props).isNotNull().hasSize(3)
-                                .containsKeys("KEY1", "KEY2", "KEY3")
-                                .containsValues("VALUE1", "VALUE2", "VALUE3");
+                assertThat(props).isNotNull().hasSize(4)
+                                .containsKeys("KEY1", "KEY2", "KEY3", "DESC")
+                                .containsValues("VALUE1", "=VALUE2", "VALUE3", "Some description");
         }
 
         @Test
