@@ -1,4 +1,4 @@
-package io.sysr.springcontext.env;
+package io.sysr.springcontext.env.configuration;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -6,6 +6,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
+
+import io.sysr.springcontext.env.EnvContextLoader;
 
 /**
  * The {@code SpringContextEnvironmentPostProcessor} class is an implementation
