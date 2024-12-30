@@ -7,6 +7,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
+
+import io.sysr.springcontext.env.configuration.SpringContextEnvironmentPostProcessor;
+
 import org.springframework.core.env.PropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
