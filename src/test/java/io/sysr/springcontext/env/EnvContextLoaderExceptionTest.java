@@ -35,7 +35,6 @@ class EnvContextLoaderExceptionTest {
 
     @Test
     void testExceptionWithNullMessage() {
-        @SuppressWarnings("null")
         EnvContextLoaderException exception = new EnvContextLoaderException(null);
         assertNull(exception.getMessage());
     }
@@ -50,7 +49,6 @@ class EnvContextLoaderExceptionTest {
 
     @Test
     void testExceptionWithNullMessageAndCause() {
-        @SuppressWarnings("null")
         EnvContextLoaderException exception = new EnvContextLoaderException(null, null);
         assertNull(exception.getMessage());
         assertNull(exception.getCause());

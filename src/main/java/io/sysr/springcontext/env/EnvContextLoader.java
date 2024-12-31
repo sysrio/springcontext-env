@@ -74,7 +74,7 @@ public class EnvContextLoader {
     private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
     private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{([^}]+)}");
     private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_-]*$");
-    private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{\\s*\\}$|\\$\\{[^}]*$|\\$\\{$");
+    private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{\\s*\\}$|\\$\\{[^}]*$");
 
     /**
      * Constructs a new {@code EnvContextLoader} instance.
@@ -110,13 +110,15 @@ public class EnvContextLoader {
      */
     public void load() {
         try {
-            String userProvidedFilePath = findEnvPropertiesFile();
+            // Load any default .env files found in the root of the project
+            loadFromDefaultRootDirectory(System.getProperty("user.dir"));
 
+            // Look for user defined env files
+            String userProvidedFilePath = findEnvPropertiesFile();
             if (Objects.nonNull(userProvidedFilePath)) {
                 loadFromUserProvidedDirectory(userProvidedFilePath);
-            } else {
-                loadFromDefaultRootDirectory(System.getProperty("user.dir"));
             }
+
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
         }
@@ -331,42 +333,15 @@ public class EnvContextLoader {
      *                                   system.
      * @throws EnvContextLoaderException If the classpath root is not a directory.
      */
-    private String findEnvPropertiesFile() throws URISyntaxException, IOException {
-        URL resourceUrl = getClass().getClassLoader().getResource("");
+    private String findEnvPropertiesFile() throws URISyntaxException {
+        URL resourceUrl = getClass().getClassLoader().getResource("dotenv.properties");
         if (Objects.nonNull(resourceUrl)) {
-            Path rootPath = Path.of(resourceUrl.toURI());
+            Path path = Path.of(resourceUrl.toURI());
+            return path.toAbsolutePath().toString();
 
-            if (!Files.isDirectory(rootPath)) {
-                throw new EnvContextLoaderException("The classpath root is not a directory: %s".formatted(rootPath));
-            }
-
-            try (Stream<Path> paths = Files.walk(rootPath)) {
-                return paths
-                        .filter(Files::isRegularFile)
-                        .filter(file -> file.getFileName().toString().equals("env.properties"))
-                        .filter(file -> isPathWithinRoot(rootPath, file))
-                        .map(Path::toString)
-                        .findFirst()
-                        .orElse(null);
-            }
         }
-        logger.warn("env.properties not found in any 'resources' directory in the classpath");
+        logger.warn("dotenv.properties not found in the classpath");
         return null;
-    }
-
-    /**
-     * Checks if a given file path is within the specified root directory to prevent
-     * directory traversal attacks.
-     *
-     * @param rootPath The root path to check against.
-     * @param file     The file path to verify.
-     * @return {@code true} if the file is within the root directory, {@code false}
-     *         otherwise.
-     */
-    private boolean isPathWithinRoot(Path rootPath, Path file) {
-        Path normalizedRootPath = rootPath.toAbsolutePath().normalize();
-        Path normalizedFilePath = file.toAbsolutePath().normalize();
-        return normalizedFilePath.startsWith(normalizedRootPath);
     }
 
     /**

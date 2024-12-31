@@ -1,3 +1,2 @@
-# Environment Post Processors
-org.springframework.boot.env.EnvironmentPostProcessor=\
-io.sysr.springcontext.env.SpringContextEnvironmentPostProcessor
+org.springframework.context.ApplicationContextInitializer=\
+io.sysr.springcontext.env.configuration.SpringContextEnvApplicationContextInitializer
