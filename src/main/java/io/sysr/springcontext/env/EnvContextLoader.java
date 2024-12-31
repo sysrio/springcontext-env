@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,13 +111,15 @@ public class EnvContextLoader {
      */
     public void load() {
         try {
-            String userProvidedFilePath = findEnvPropertiesFile();
+            // Load any default .env files found in the root of the project
+            loadFromDefaultRootDirectory(System.getProperty("user.dir"));
 
+            // Look for user defined env files
+            String userProvidedFilePath = findEnvPropertiesFile();
             if (Objects.nonNull(userProvidedFilePath)) {
                 loadFromUserProvidedDirectory(userProvidedFilePath);
-            } else {
-                loadFromDefaultRootDirectory(System.getProperty("user.dir"));
             }
+
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
         }
@@ -331,26 +334,14 @@ public class EnvContextLoader {
      *                                   system.
      * @throws EnvContextLoaderException If the classpath root is not a directory.
      */
-    private String findEnvPropertiesFile() throws URISyntaxException, IOException {
-        URL resourceUrl = getClass().getClassLoader().getResource("");
+    private String findEnvPropertiesFile() throws URISyntaxException {
+        URL resourceUrl = getClass().getClassLoader().getResource("dotenv.properties");
         if (Objects.nonNull(resourceUrl)) {
-            Path rootPath = Path.of(resourceUrl.toURI());
+            Path path = Path.of(resourceUrl.toURI());
+            return path.toAbsolutePath().toString();
 
-            if (!Files.isDirectory(rootPath)) {
-                throw new EnvContextLoaderException("The classpath root is not a directory: %s".formatted(rootPath));
-            }
-
-            try (Stream<Path> paths = Files.walk(rootPath)) {
-                return paths
-                        .filter(Files::isRegularFile)
-                        .filter(file -> file.getFileName().toString().equals("env.properties"))
-                        .filter(file -> isPathWithinRoot(rootPath, file))
-                        .map(Path::toString)
-                        .findFirst()
-                        .orElse(null);
-            }
         }
-        logger.warn("env.properties not found in any 'resources' directory in the classpath");
+        logger.warn("dotenv.properties not found in the classpath");
         return null;
     }
 

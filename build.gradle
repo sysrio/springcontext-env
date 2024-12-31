@@ -47,6 +47,8 @@ jar {
             'Build-Jdk'       : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
         )
     }
+
+    archiveFileName.set("${project.name}-${project.version}.jar")
 }
 
 develocity {
@@ -80,14 +82,19 @@ publishing {
             groupId = project.group
             artifactId = project.name
             description = project.description
-
+            copyright = project.copyright
+            inceptionYear = project.inceptionYear
+            
             from components.java
 
             pom {
                 name = project.name
+                copyright = project.copyright
                 description = project.description
+                inceptionYear = project.inceptionYear
+
                 url = 'https://github.com/sysrio/springcontext-env'
-                inceptionYear = '2024'
+
                 licenses {
                     license {
                         name = 'Artistic License 2.0'
@@ -120,7 +127,12 @@ jreleaser {
     signing {
         active = 'ALWAYS'
         armored = true
-    }
+    } 
+
+    // assemble {
+    //     active = 'ALWAYS'
+    // }
+    
     deploy {
         maven {
             /* Portal Publisher API*/
