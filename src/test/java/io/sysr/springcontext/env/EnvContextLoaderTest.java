@@ -23,7 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 import io.sysr.springcontext.env.exception.EnvContextLoaderException;
 
 class EnvContextLoaderTest {
-        private static final String ENV_PROPERTIES_CONFIG_FILE_NAME = "env.properties";
+        private static final String ENV_PROPERTIES_CONFIG_FILE_NAME = "dotenv.properties";
         private EnvContextLoader envContextLoader;
 
         @TempDir
@@ -48,10 +48,8 @@ class EnvContextLoaderTest {
                 URL url = EnvContextLoader.class.getClassLoader().getResource("");
                 Path root = Path.of(url.toURI());
 
-                // Create the resources directory and env.properties file
-                Path resourcesDirPath = root.resolve("resources");
-                Files.createDirectories(resourcesDirPath);
-                Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+                // Create the env.properties file
+                Path envFile = root.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
                 Files.createFile(envFile);
 
                 try {
@@ -75,8 +73,7 @@ class EnvContextLoaderTest {
                 Path root = Path.of(url.toURI());
 
                 // Ensure the env.properties file does not exist
-                Path resourcesDirPath = root.resolve("resources");
-                Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+                Path envFile = root.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
 
                 if (Files.exists(envFile)) {
                         fail("Test failed because env.properties file exists when it should not.");
@@ -105,9 +102,7 @@ class EnvContextLoaderTest {
                 Path root = Path.of(url.toURI());
 
                 // Create the resources directory and env.properties file
-                Path resourcesDirPath = root.resolve("resources");
-                Files.createDirectories(resourcesDirPath);
-                Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+                Path envFile = root.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
                 Files.createFile(envFile);
                 Files.writeString(envFile,
                                 "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(
@@ -152,10 +147,8 @@ class EnvContextLoaderTest {
                 URL url = EnvContextLoader.class.getClassLoader().getResource("");
                 Path root = Path.of(url.toURI());
 
-                // Create the resources directory and env.properties file
-                Path resourcesDirPath = root.resolve("resources");
-                Files.createDirectories(resourcesDirPath);
-                Path envFile = resourcesDirPath.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
+                // Create the resouce file: env.properties file
+                Path envFile = root.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
                 Files.createFile(envFile);
                 Files.writeString(envFile,
                                 "BASE_DIR=%s%nFILE_NAME=%s%n".formatted(
