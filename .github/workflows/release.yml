@@ -1,0 +1,11 @@
+name: release
+on:
+  workflow_dispatch:
+jobs:
+  release-approval:
+    environment:
+      name: approve
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - run: echo 'approved'
