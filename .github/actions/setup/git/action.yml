@@ -1,0 +1,21 @@
+name: Git setup
+description: Configures Git with username, email, and GPG signing keys
+inputs:
+  username:
+    description: Git username
+    required: true
+  email:
+    description: Git user email
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure git
+      shell: bash
+      run: |
+        # Configure Git with username, email, and signing key
+        git config user.name "${{ inputs.username }}"
+        git config user.email "${{ inputs.email }}"
+
+        # Verify Git configuration
+        git config --list
