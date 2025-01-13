@@ -28,11 +28,24 @@ jobs:
       - name: Remove SNAPSHOT from project version number
         run: |
           # Read the current version from gradle.properties
-          current_version=$(grep -oP '^version = \K[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' gradle.properties)
-          echo 'Current version: $current_version'
-          echo 'Removing SNAPSHOT'
-          sed -i '/^version = /s/-SNAPSHOT//' gradle.properties
-          echo cat gradle.properties
+          current_version=$(grep -oP '^version = \K[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' gradle.properties || echo "")
+          if [[ -z "$current_version" ]]; then
+              echo "Error: Could not find a valid version in gradle.properties"
+              exit 1
+          fi
+          echo "Current version: $current_version"
+
+          # Check if the version contains -SNAPSHOT
+          if grep -q '^version = .*SNAPSHOT' gradle.properties; then
+              echo "Removing SNAPSHOT from version"
+              sed -i '/^version = /s/-SNAPSHOT//' gradle.properties
+          else
+              echo "No SNAPSHOT found in version"
+          fi
+
+          # Display the updated gradle.properties
+          echo "Updated gradle.properties:"
+          cat gradle.properties
 
       - name: Setup git
         uses: ./.github/actions/setup/git
