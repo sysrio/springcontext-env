@@ -25,6 +25,31 @@ jobs:
           repository: ${{ github.event.repository.full_name }}
           ref: ${{ github.ref }}
 
+      - name: Upload GPG public signing key to key servers
+        run: |
+          # Import the ASCII-armored public key from the secret
+          echo "${{ secrets.GPG_PUBLIC_KEY }}" | gpg --import
+
+          # Set the GPG key fingerprint
+          KEY_FINGERPRINT=$(gpg --list-keys --with-colons "${{ secrets.GPG_PUBLIC_KEY }}" | grep fpr | cut -d: -f10)
+          echo "Key Fingerprint: $KEY_FINGERPRINT"
+
+          # Check if the key exists on keys.openpgp.org
+          if curl -s "https://keys.openpgp.org/vks/v1/by-fingerprint/$KEY_FINGERPRINT" | grep -q "$KEY_FINGERPRINT"; then
+              echo "Key already exists on keys.openpgp.org"
+          else
+              echo "Uploading key to keys.openpgp.org"
+              gpg --keyserver keys.openpgp.org --send-keys "$KEY_FINGERPRINT"
+          fi
+
+          # Check if the key exists on keyserver.ubuntu.com
+          if gpg --keyserver keyserver.ubuntu.com --recv-keys "$KEY_FINGERPRINT" 2>&1 | grep -q "key $KEY_FINGERPRINT:"; then
+              echo "Key already exists on keyserver.ubuntu.com"
+          else
+              echo "Uploading key to keyserver.ubuntu.com"
+              gpg --keyserver keyserver.ubuntu.com --send-keys "$KEY_FINGERPRINT"
+          fi
+
       - name: Remove SNAPSHOT from project version number
         run: |
           # Read the current version from gradle.properties
