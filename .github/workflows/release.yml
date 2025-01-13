@@ -5,7 +5,7 @@ on:
 jobs:
   release-approval:
     environment:
-      name: approve
+      name: approval
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
@@ -28,10 +28,10 @@ jobs:
       - name: Remove SNAPSHOT from project version number
         run: |
           # Read the current version from gradle.properties
-          current_version=$(grep -oP '^version=\K[0-9]+\.[0-9]+\.[0-9]+' gradle.properties)
+          current_version=$(grep -oP '^version = \K[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' gradle.properties)
           echo 'Current version: $current_version'
           echo 'Removing SNAPSHOT'
-          sed -i '/^version=/s/-SNAPSHOT//' gradle.properties
+          sed -i '/^version = /s/-SNAPSHOT//' gradle.properties
           echo cat gradle.properties
 
       - name: Setup git
