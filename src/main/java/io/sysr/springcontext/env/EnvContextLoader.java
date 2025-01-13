@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -111,12 +112,21 @@ public class EnvContextLoader {
     public void load() {
         try {
             // Load any default .env files found in the root of the project
-            loadFromDefaultRootDirectory(System.getProperty("user.dir"));
+            loadEnvFilesFromDirectory(System.getProperty("user.dir"));
 
             // Look for user defined env files
             String userProvidedFilePath = findEnvPropertiesFile();
             if (Objects.nonNull(userProvidedFilePath)) {
-                loadFromUserProvidedDirectory(userProvidedFilePath);
+                loadEnvFilesFromUserDefinedPath(userProvidedFilePath);
+            }
+
+            // Look for System.env for DIR_PATH.
+            // This is manly applicable when running a containerized app
+            String dirPath = System.getenv("ENV_DIR_PATH");
+            if (Objects.nonNull(dirPath)) {
+                // Replace single backslashes with double backslashes for Windows paths
+                dirPath = dirPath.replace("\\", "\\\\");
+                loadEnvFilesFromDirectory(dirPath);
             }
 
         } catch (Exception e) {
@@ -138,7 +148,7 @@ public class EnvContextLoader {
      * @throws EnvContextLoaderException if there is an error reading the properties
      *                                   or loading the files.
      */
-    private void loadFromUserProvidedDirectory(String envPropertiesFilePath) {
+    private void loadEnvFilesFromUserDefinedPath(String envPropertiesFilePath) {
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(
                 envPropertiesFilePath)),
                 StandardCharsets.UTF_8)) {
@@ -173,14 +183,16 @@ public class EnvContextLoader {
     }
 
     /**
-     * Loads <code>.env</code> files from the default root directory.
+     * Loads <code>.env</code> files from the directory returned by
+     * <code>System.getProperty("user.dir")</code> or specified by Environment
+     * Property <code>ENV_DIR_PATH</code>.
      *
      * @param filePath The root directory path where <code>.env</code> files are
      *                 located.
      * @throws EnvContextLoaderException if there is an error reading the directory
      *                                   or loading the files.
      */
-    private void loadFromDefaultRootDirectory(String filePath) {
+    private void loadEnvFilesFromDirectory(String filePath) {
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Path.of(filePath))) {
             for (Path path : directoryStream) {
                 File file = path.toFile();
@@ -248,8 +260,9 @@ public class EnvContextLoader {
             String name = stack.peek();
             // When a variable value defined use its value
             // otherwise, fall back to the system property with the same name.
-            String value = Objects.nonNull(props.getProperty(name)) ? props.getProperty(name)
-                    : System.getProperty(name);
+            String value = Optional.ofNullable(props.getProperty(name))
+                    .orElse(Optional.ofNullable(System.getenv(name))
+                            .orElse(System.getProperty(name)));
 
             if (Objects.isNull(value)) {
                 logger.warn("The definition of the env variable {} is not found!", name);

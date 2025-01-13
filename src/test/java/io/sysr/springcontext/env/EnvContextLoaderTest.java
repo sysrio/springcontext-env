@@ -122,7 +122,7 @@ class EnvContextLoaderTest {
 
                         // Load file from user dir
                         Method loadFromUserDirMethod = EnvContextLoader.class.getDeclaredMethod(
-                                        "loadFromUserProvidedDirectory",
+                                        "loadEnvFilesFromUserDefinedPath",
                                         String.class);
 
                         loadFromUserDirMethod.setAccessible(true);
@@ -168,7 +168,7 @@ class EnvContextLoaderTest {
 
                         // Load file from user dir
                         Method loadFromUserDirMethod = EnvContextLoader.class.getDeclaredMethod(
-                                        "loadFromUserProvidedDirectory",
+                                        "loadEnvFilesFromUserDefinedPath",
                                         String.class);
 
                         loadFromUserDirMethod.setAccessible(true);
@@ -190,7 +190,7 @@ class EnvContextLoaderTest {
                 Path envFile = Files.createFile(rootPath.resolve(".env"));
                 Files.writeString(envFile, "KEY=VALUE", StandardCharsets.UTF_8);
 
-                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadFromDefaultRootDirectory",
+                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadEnvFilesFromDirectory",
                                 String.class);
                 loadFromDefaultRootDir.setAccessible(true);
                 loadFromDefaultRootDir.invoke(envContextLoader, rootPath.toAbsolutePath().toString());
@@ -206,7 +206,7 @@ class EnvContextLoaderTest {
         void whenDefaultRootLoaderIsTriggeredAndEnvFileIsNotAvailable_thenNothingIsLoaded()
                         throws NoSuchMethodException, SecurityException, IllegalAccessException,
                         InvocationTargetException {
-                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadFromDefaultRootDirectory",
+                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadEnvFilesFromDirectory",
                                 String.class);
                 loadFromDefaultRootDir.setAccessible(true);
                 loadFromDefaultRootDir.invoke(envContextLoader, tempDir.toAbsolutePath().toString());
