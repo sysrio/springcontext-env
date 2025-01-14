@@ -40,16 +40,25 @@ jobs:
       - name: Debug Environment Variables
         run: |
           echo "HOME: $HOME"
-          echo ${{ env.USERPROFILE }}
-      - name: Cache Gradle packages
+          echo $(${{ env.USERPROFILE }})
+
+      - name: Cache Gradle Windows packages
+        if: runner.os == 'Windows'
         uses: actions/cache@v4
         with:
           path: |
-            $HOME\.gradle\caches
-            $HOME\.gradle\wrapper
+            ${{ env.USERPROFILE }}\.gradle\caches
+            ${{ env.USERPROFILE }}\.gradle\wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+
+      - name: Cache Gradle Unix packages
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.HOME }}/.gradle/caches
+            ${{ env.HOME }}/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Build, Test, and Analyze
         env:
