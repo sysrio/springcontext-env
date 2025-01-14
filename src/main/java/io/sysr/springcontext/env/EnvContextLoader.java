@@ -260,11 +260,15 @@ public class EnvContextLoader {
             String name = stack.peek();
             // When a variable value defined use its value
             // otherwise, fall back to the system property with the same name.
-            String value = Optional.ofNullable(props.getProperty(name))
-                    .orElse(Optional.ofNullable(System.getenv(name))
-                            .orElse(System.getProperty(name)));
+            String value = props.getProperty(name);
+            if (Objects.isNull(value) || value.isBlank()) {
+                value = System.getenv(name);
+                if (Objects.isNull(value) || value.isBlank()) {
+                    value = System.getProperty(name);
+                }
+            }
 
-            if (Objects.isNull(value)) {
+            if (Objects.isNull(value) || value.isBlank()) {
                 logger.warn("The definition of the env variable {} is not found!", name);
                 // We cannot resolve this variable
                 return null;

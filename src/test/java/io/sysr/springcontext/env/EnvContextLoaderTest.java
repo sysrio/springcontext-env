@@ -245,15 +245,15 @@ class EnvContextLoaderTest {
         @Test
         void whenSystemEnvVariableIsProvidedAndReferenced_thenSubstituteEnvVariable() throws IOException {
                 System.setProperty("SYSTEM_VAR", "SystemValue");
-                String content = "KEY=${SYSTEM_VAR}";
+                String content = "KEY=${SYSTEM_VAR}\nPATH=\n";
                 Files.writeString(tempDir.resolve(".env"), content, StandardCharsets.UTF_8);
 
                 envContextLoader.load();
                 Properties props = envContextLoader.getLoadedProperties();
 
-                assertThat(props).isNotNull().hasSize(1)
-                                .containsKey("KEY")
-                                .containsValue("SystemValue");
+                assertThat(props).isNotNull().hasSize(2)
+                                .containsKeys("KEY", "PATH")
+                                .containsValues("SystemValue", System.getenv("PATH"));
         }
 
         @Test
