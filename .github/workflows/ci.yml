@@ -37,18 +37,14 @@ jobs:
           path: $HOME/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
           restore-keys: ${{ runner.os }}-sonar
-      - name: Debug Environment Variables
-        run: |
-          echo "HOME: $HOME"
-          echo $(${{ env.USERPROFILE }})
 
       - name: Cache Gradle Windows packages
         if: runner.os == 'Windows'
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.USERPROFILE }}\.gradle\caches
-            ${{ env.USERPROFILE }}\.gradle\wrapper
+            **/*\.gradle\caches
+            **/*\.gradle\wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Cache Gradle Unix packages
@@ -56,8 +52,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.HOME }}/.gradle/caches
-            ${{ env.HOME }}/.gradle/wrapper
+            ~/.gradle/caches
+            ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Build, Test, and Analyze
@@ -67,10 +63,3 @@ jobs:
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: ./gradlew clean build sonar --stacktrace --scan --no-daemon --debug --max-workers 2
-
-      - name: Upload Test Results
-        if: failure() && (github.event_name == 'pull_request' || github.event_name == 'push')
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results-${{ matrix.os }}
-          path: "**/build/test-results/**/*.xml"
