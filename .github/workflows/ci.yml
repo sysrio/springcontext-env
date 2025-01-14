@@ -37,13 +37,17 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
           restore-keys: ${{ runner.os }}-sonar
+      - name: Debug Environment Variables
+        run: |
+          echo "HOME: $HOME"
+          echo "USERPROFILE: $USERPROFILE"
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            ${{ env.USERPROFILE }}\.gradle\caches
+            ${{ env.USERPROFILE }}\.gradle\wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
