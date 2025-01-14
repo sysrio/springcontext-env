@@ -141,6 +141,11 @@ jreleaser {
             }
         }
     }
+
+    upload {
+        active = 'ALWAYS'
+    }
+
     gitRootSearch = true
     strict = true
 }
