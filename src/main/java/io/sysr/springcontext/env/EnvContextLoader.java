@@ -159,22 +159,28 @@ public class EnvContextLoader {
                     .findFirst()
                     .orElse(null);
 
-            if (Objects.nonNull(directoryPath)) {
+            if (Objects.nonNull(directoryPath) && !directoryPath.isBlank()) {
                 List<String> fileNameKeys = props.stringPropertyNames()
                         .stream().filter(key -> key.toUpperCase().startsWith("FILE"))
                         .toList();
-
-                for (String fileNameKey : fileNameKeys) {
-                    String fileName = props.getProperty(fileNameKey);
-                    Path path = Path.of(directoryPath).normalize().resolve(fileName).normalize();
-                    File file = path.toFile();
-                    if (file.exists() && file.isFile()) {
-                        parse(path);
-                        logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                // Perform normal loading if no file keys are found
+                // Load all .env files in the directory
+                if (fileNameKeys.isEmpty()) {
+                    loadEnvFilesFromDirectory(directoryPath);
+                } else {
+                    // Only load the specified files
+                    for (String fileNameKey : fileNameKeys) {
+                        String fileName = props.getProperty(fileNameKey);
+                        Path path = Path.of(directoryPath).normalize().resolve(fileName).normalize();
+                        File file = path.toFile();
+                        if (file.exists() && file.isFile()) {
+                            parse(path);
+                            logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                        }
                     }
                 }
             } else {
-                logger.warn("BASE_DIR not found in the properties file - {}", envPropertiesFilePath);
+                logger.warn("ENV_DIR_PATH not found in the properties file - {}", envPropertiesFilePath);
             }
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
