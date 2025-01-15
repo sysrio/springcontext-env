@@ -153,7 +153,7 @@ public class EnvContextLoader {
                 StandardCharsets.UTF_8)) {
             Properties props = new Properties();
             props.load(reader);
-            String directoryPath = Stream.of("BASE_DIR")
+            String directoryPath = Stream.of("ENV_DIR_PATH")
                     .map(key -> props.getProperty(key.toUpperCase()))
                     .filter(Objects::nonNull)
                     .findFirst()
