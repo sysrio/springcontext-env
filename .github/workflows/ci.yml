@@ -36,7 +36,7 @@ jobs:
         with:
           path: |
             # Handle windows and unix paths
-            ${{ env.USERPROFILE }}\.sonar/cache
+            ~\.sonar/cache
             ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
           restore-keys: ${{ runner.os }}-sonar
