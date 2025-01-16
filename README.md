@@ -1,6 +1,7 @@
 # **Spring context dotenv loader**
 
 [![test](https://github.com/sysrio/springcontext-env/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sysrio/springcontext-env/actions/workflows/ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=springcontext-env&metric=alert_status)](https://sonarcloud.io/dashboard?id=springcontext-env)
 [![Maven Central](https://img.shields.io/maven-central/v/io.sysr/springcontext-env.svg?label=Maven%20Central)](https://search.maven.org/artifact/io.sysr/springcontext-env)
 
 `springcontext-env` is a lightweight, no-dependency (`no deps`) environment variables loader for Spring applications. It can be used in both standalone Spring applications or Spring Boot-powered applications. By _Spring standalone_, we mean applications that do not use Spring Boot auto-configurations.
@@ -190,7 +191,7 @@ The current version is **1.0.4**
 
 - Using gradle
   ```
-  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.0.4  
+  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.0.4
   ```
 - Using Apache Maven
   ```
