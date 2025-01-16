@@ -1,0 +1,50 @@
+name: version management
+description: Configures versioning by updating the version to the next SNAPSHOT version after and performing a release
+runs:
+  using: composite
+  steps:
+    - name: Prepare next version
+      shell: bash
+      run: |
+        latest_version=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
+        if [[ -z "$latest_version" ]]; then
+            echo "Error: Failed to get the latest release version"
+            exit 1
+        fi
+        echo "Latest release version: $latest_version"
+
+        # Remove the 'v' prefix if it exists
+        latest_version=${latest_version#v}
+
+        # Split the version into major, minor, and patch parts
+        IFS='.' read -r major minor patch <<< "$latest_version"
+
+        # Increment the version number
+        if [[ $patch -eq 9 ]]; then
+            patch=0
+            if [[ $minor -eq 9 ]]; then
+                minor=0
+                major=$((major + 1))
+            else
+                minor=$((minor + 1))
+            fi
+        else
+            patch=$((patch + 1))
+        fi
+        next_version="$major.$minor.$patch-SNAPSHOT"
+        echo "Next version: $next_version"
+
+        # Update the version in gradle.properties
+        sed -i "s/^version = .*/version = $next_version/" gradle.properties
+
+        # Update the version in the README.md file
+        sed -i "s/^The current version is .*/The current version is **$latest_version**/" README.md
+        sed -i "s/\(version: \)[^ ]*/\1$latest_version /" README.md
+        sed -i "s/\(<version>\)[^<]*\(<\/version>\)/\1$latest_version\2/" README.md
+
+        # Display the updated gradle.properties and README.md
+        echo "Updated gradle.properties:"
+        cat gradle.properties
+
+        echo "Updated README.md:"
+        cat README.md

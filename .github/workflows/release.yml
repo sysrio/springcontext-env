@@ -1,4 +1,4 @@
-name: release ci
+name: artifact-release
 on:
   workflow_dispatch:
 
@@ -83,6 +83,9 @@ jobs:
         with:
           username: ${{ vars.GIT_USERNAME }}
           email: ${{ vars.USER_EMAIL }}
+          gpg_public_key: ${{ secrets.GPG_PUBLIC_KEY }}
+          gpg_secret_key: ${{ secrets.GPG_SECRET_KEY }}
+          gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Setup Gradle
         uses: ./.github/actions/setup/gradle
@@ -111,3 +114,14 @@ jobs:
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           JRELEASER_MAVENCENTRAL_SONATYPE_USERNAME: ${{ secrets.MAVENCENTRAL_SONATYPE_USERNAME }}
           JRELEASER_MAVENCENTRAL_SONATYPE_TOKEN: ${{ secrets.MAVENCENTRAL_SONATYPE_TOKEN }}
+
+      - name: Update project version number to next SNAPSHOT
+        uses: ./.github/actions/setup/versioning
+
+      - name: Commit and push version changes
+        run: |
+          git add gradle.properties README.md
+          git commit -m "Prepare for next development iteration"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

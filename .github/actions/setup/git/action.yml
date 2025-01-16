@@ -7,15 +7,45 @@ inputs:
   email:
     description: Git user email
     required: true
+  gpg_public_key:
+    description: GPG public key
+    required: true
+  gpg_secret_key:
+    description: GPG secret key
+    required: true
+  gpg_passphrase:
+    description: GPG passphrase
+    required: true
 runs:
   using: composite
   steps:
     - name: Configure git
       shell: bash
       run: |
-        # Configure Git with username, email, and signing key
-        git config user.name "${{ inputs.username }}"
-        git config user.email "${{ inputs.email }}"
+        # Import the GPG secret key
+        echo "${{ inputs.gpg_secret_key }}" | gpg --batch --import
+
+        # Configure GPG for non-interactive use
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        gpgconf --kill gpg-agent
+
+        # Set GPG_TTY
+        export GPG_TTY=$(tty)
+
+        # Provide the GPG passphrase to gpg-agent
+        echo "${{ inputs.gpg_passphrase }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --import
+
+        # Retrieve the GPG key ID
+        GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep '^sec' | awk '{print $2}' | cut -d'/' -f2)
+
+        # Configure Git
+        git config --global user.signingkey "$GPG_KEY_ID"
+        git config --global user.name "${{ inputs.username }}"
+        git config --global user.email "${{ inputs.email }}"
+        git config --global commit.gpgSign true
+        git config --global tag.gpgSign true
+        git config --global gpg.program gpg
 
         # Verify Git configuration
         git config --list
