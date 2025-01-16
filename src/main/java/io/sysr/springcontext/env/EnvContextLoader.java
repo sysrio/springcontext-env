@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +69,15 @@ public class EnvContextLoader {
      * A concurrent map storing all loaded and resolved environment properties.
      */
     private final ConcurrentHashMap<String, String> propertiesMap = new ConcurrentHashMap<>();
-
+    /**
+     * A set of environment files to load.
+     * These are specified in the dotenv.properties file.
+     */
+    private final Set<String> envFilesToLoad = new HashSet<>();
+    /**
+     * The directory path where the environment files are located.
+     */
+    private String ENV_DIR_PATH;
     private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
     private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{([^}]+)}");
     private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_-]*$");
@@ -101,8 +108,8 @@ public class EnvContextLoader {
      *
      * <p>
      * It attempts to load variables from a user-provided file which is specified in
-     * the <code>env.properties</code> file or from <code>.env</code> files in the
-     * default root directory.
+     * the <code>dotenv.properties</code> file or from <code>.env</code> files in
+     * the default root directory where JVM is invoked.
      * </p>
      *
      * @throws EnvContextLoaderException if there is any error during the loading
@@ -110,101 +117,58 @@ public class EnvContextLoader {
      */
     public void load() {
         try {
-            // Load any default .env files found in the root of the project
-            loadEnvFilesFromDirectory(System.getProperty("user.dir"));
-
-            // Look for user defined env files
-            String userProvidedFilePath = findEnvPropertiesFile();
-            if (Objects.nonNull(userProvidedFilePath)) {
-                loadEnvFilesFromUserDefinedPath(userProvidedFilePath);
-            }
-
-            // Look for System.env for DIR_PATH.
-            // This is manly applicable when running a containerized app
-            String dirPath = System.getenv("ENV_DIR_PATH");
-            if (Objects.nonNull(dirPath)) {
-                // Replace single backslashes with double backslashes for Windows paths
-                dirPath = dirPath.replace("\\", "\\\\");
-                loadEnvFilesFromDirectory(dirPath);
-            }
-
-        } catch (Exception e) {
-            throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
-        }
-    }
-
-    /**
-     * Loads environment variables from a user-provided <code>.env</code>
-     * files.
-     *
-     * <p>
-     * Reads the <code>BASE_DIR</code> and locates the files specified by the
-     * <code>FILE*</code> properties to locate and load <code>.env</code> files.
-     * </p>
-     *
-     * @param envPropertiesFilePath The file path to the <code>env.properties</code>
-     *                              file provided by the user.
-     * @throws EnvContextLoaderException if there is an error reading the properties
-     *                                   or loading the files.
-     */
-    private void loadEnvFilesFromUserDefinedPath(String envPropertiesFilePath) {
-        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(
-                envPropertiesFilePath)),
-                StandardCharsets.UTF_8)) {
-            Properties props = new Properties();
-            props.load(reader);
-            String directoryPath = Stream.of("ENV_DIR_PATH")
-                    .map(key -> props.getProperty(key.toUpperCase()))
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-
-            if (Objects.nonNull(directoryPath) && !directoryPath.isBlank()) {
-                List<String> fileNameKeys = props.stringPropertyNames()
-                        .stream().filter(key -> key.toUpperCase().startsWith("FILE"))
-                        .toList();
-                // Perform normal loading if no file keys are found
-                // Load all .env files in the directory
-                if (fileNameKeys.isEmpty()) {
-                    loadEnvFilesFromDirectory(directoryPath);
-                } else {
-                    // Only load the specified files
-                    for (String fileNameKey : fileNameKeys) {
-                        String fileName = props.getProperty(fileNameKey);
-                        Path path = Path.of(directoryPath).normalize().resolve(fileName).normalize();
-                        File file = path.toFile();
-                        if (file.exists() && file.isFile()) {
-                            parse(path);
-                            logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
-                        }
-                    }
+            // Check if the user has provided the dotenv.properties file
+            String dotenvPropertiesPath = findEnvPropertiesFile();
+            if (Objects.nonNull(dotenvPropertiesPath)) {
+                setEnvFilesToLoad(dotenvPropertiesPath);
+                // Load from the ENV_DIR_PATH specifired in the dotenv.properties file
+                if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
+                    loadEnvFilesFromDirectory();
+                    return;
                 }
-            } else {
-                logger.warn("ENV_DIR_PATH not found in the properties file - {}", envPropertiesFilePath);
             }
+
+            // Look for System.env for ENV_DIR_PATH.
+            ENV_DIR_PATH = System.getenv("ENV_DIR_PATH");
+            if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
+                // Replace single backslashes with double backslashes for Windows paths
+                ENV_DIR_PATH = ENV_DIR_PATH.replace("\\", "\\\\");
+                loadEnvFilesFromDirectory();
+                return;
+            }
+
+            // Default JVM invocation directory
+            ENV_DIR_PATH = System.getProperty("user.dir");
+            // Load from the default root directory
+            loadEnvFilesFromDirectory();
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
         }
     }
 
     /**
-     * Loads <code>.env</code> files from the directory returned by
-     * <code>System.getProperty("user.dir")</code> or specified by Environment
-     * Property <code>ENV_DIR_PATH</code>.
+     * Loads <code>.env</code> files from the directory specified by the
+     * ENV_DIR_PATH.
      *
-     * @param filePath The root directory path where <code>.env</code> files are
-     *                 located.
      * @throws EnvContextLoaderException if there is an error reading the directory
      *                                   or loading the files.
      */
-    private void loadEnvFilesFromDirectory(String filePath) {
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Path.of(filePath))) {
+    private void loadEnvFilesFromDirectory() {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Path.of(ENV_DIR_PATH))) {
             for (Path path : directoryStream) {
                 File file = path.toFile();
-                if (file.isFile() && file.getName().matches(ENV_FILE_NAME_PATTERN.pattern())) {
-                    parse(path.normalize());
-                    logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                if (envFilesToLoad.isEmpty()) {
+                    if (file.isFile() && file.getName().matches(ENV_FILE_NAME_PATTERN.pattern())) {
+                        parse(path.normalize());
+                        logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                    }
+                } else {
+                    if (file.isFile() && envFilesToLoad.contains(file.getName())) {
+                        parse(path.normalize());
+                        logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                    }
                 }
+
             }
         } catch (Exception e) {
             throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
@@ -377,5 +341,36 @@ public class EnvContextLoader {
     private boolean isValidVariableName(String variableName) {
         Matcher matcher = VARIABLE_NAME_PATTERN.matcher(variableName);
         return matcher.matches();
+    }
+
+    /**
+     * Reads the <code>dotenv.properties</code> file and sets the environment files
+     * to load and the directory path where the files are located.
+     *
+     * @param envPropertiesFilePath The path to the <code>dotenv.properties</code>
+     *                              file to read.
+     * @throws IOException If an I/O error occurs reading the file.
+     */
+    private void setEnvFilesToLoad(String envPropertiesFilePath) throws IOException {
+        try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(Path.of(
+                envPropertiesFilePath)),
+                StandardCharsets.UTF_8)) {
+            Properties props = new Properties();
+            props.load(reader);
+
+            // Look for the ENV_DIR_PATH
+            ENV_DIR_PATH = props.getProperty("ENV_DIR_PATH");
+
+            // Look for the files to load
+            List<String> fileNameKeys = props.stringPropertyNames()
+                    .stream().filter(key -> key.toUpperCase().startsWith("FILE_"))
+                    .toList();
+            for (String key : fileNameKeys) {
+                String value = props.getProperty(key);
+                if (Objects.nonNull(value) && !value.isBlank()) {
+                    envFilesToLoad.add(value);
+                }
+            }
+        }
     }
 }

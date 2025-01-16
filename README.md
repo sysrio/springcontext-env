@@ -39,7 +39,7 @@ There are several ways to tell the library where to look for your `.env` files:
    FILE_NAME=.env-dev
    ```
 
-   - Remember that file name in the `dotenv.properties` must start with **`FILE_`** followed by any letter or names you like.
+   - Remember that file name in the `dotenv.properties` must start with **`FILE_`** followed by any letter or names you like. The variable `ENV_DIR_PATH` is case sensitive in UNIX. We recommend you maintain the uppercasing format.
 
 2. **Add a system environment variable**
 
