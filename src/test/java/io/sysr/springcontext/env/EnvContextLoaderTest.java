@@ -76,7 +76,8 @@ class EnvContextLoaderTest {
                 Path envFile = root.resolve(ENV_PROPERTIES_CONFIG_FILE_NAME);
 
                 if (Files.exists(envFile)) {
-                        fail("Test failed because env.properties file exists when it should not.");
+                        fail("Test failed because %s file exists when it should not."
+                                        .formatted(ENV_PROPERTIES_CONFIG_FILE_NAME));
                 }
 
                 Method method = EnvContextLoader.class.getDeclaredMethod("findEnvPropertiesFile");
@@ -120,14 +121,7 @@ class EnvContextLoaderTest {
                         assertThat(new File(path)).exists().isFile();
                         assertThat(path).isEqualTo(envFile.toString());
 
-                        // Load file from user dir
-                        Method loadFromUserDirMethod = EnvContextLoader.class.getDeclaredMethod(
-                                        "loadEnvFilesFromUserDefinedPath",
-                                        String.class);
-
-                        loadFromUserDirMethod.setAccessible(true);
-                        loadFromUserDirMethod.invoke(envContextLoader, path);
-
+                        envContextLoader.load();
                         Properties props = envContextLoader.getLoadedProperties();
 
                         assertThat(props).isNotNull().hasSize(1);
@@ -166,14 +160,7 @@ class EnvContextLoaderTest {
                         assertThat(new File(path)).exists().isFile();
                         assertThat(path).isEqualTo(envFile.toString());
 
-                        // Load file from user dir
-                        Method loadFromUserDirMethod = EnvContextLoader.class.getDeclaredMethod(
-                                        "loadEnvFilesFromUserDefinedPath",
-                                        String.class);
-
-                        loadFromUserDirMethod.setAccessible(true);
-                        loadFromUserDirMethod.invoke(envContextLoader, path);
-
+                        envContextLoader.load();
                         Properties props = envContextLoader.getLoadedProperties();
                         assertThat(props).isNotNull().isEmpty();
 
@@ -190,11 +177,7 @@ class EnvContextLoaderTest {
                 Path envFile = Files.createFile(rootPath.resolve(".env"));
                 Files.writeString(envFile, "KEY=VALUE", StandardCharsets.UTF_8);
 
-                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadEnvFilesFromDirectory",
-                                String.class);
-                loadFromDefaultRootDir.setAccessible(true);
-                loadFromDefaultRootDir.invoke(envContextLoader, rootPath.toAbsolutePath().toString());
-
+                envContextLoader.load();
                 Properties props = envContextLoader.getLoadedProperties();
 
                 assertThat(props).isNotNull().hasSize(1);
@@ -206,12 +189,10 @@ class EnvContextLoaderTest {
         void whenDefaultRootLoaderIsTriggeredAndEnvFileIsNotAvailable_thenNothingIsLoaded()
                         throws NoSuchMethodException, SecurityException, IllegalAccessException,
                         InvocationTargetException {
-                Method loadFromDefaultRootDir = EnvContextLoader.class.getDeclaredMethod("loadEnvFilesFromDirectory",
-                                String.class);
-                loadFromDefaultRootDir.setAccessible(true);
-                loadFromDefaultRootDir.invoke(envContextLoader, tempDir.toAbsolutePath().toString());
 
+                envContextLoader.load();
                 Properties props = envContextLoader.getLoadedProperties();
+
                 assertThat(props).isNotNull().isEmpty();
         }
 
