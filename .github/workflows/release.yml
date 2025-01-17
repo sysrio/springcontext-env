@@ -120,8 +120,35 @@ jobs:
 
       - name: Commit and push version changes
         run: |
+          git checkout -b dev
           git add gradle.properties README.md
           git commit -m "Prepare for next development iteration"
-          git push
+          git push origin dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: "Prepare for next development iteration"
+          commit-message: "Prepare for next development iteration"
+          branch: "auto-pr-${{ github.sha }}"
+          delete-branch: false
+          body: |
+            Prepare for next development iteration
+          base: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Request Review
+        if: steps.cpr.outputs.pull-request-number
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.cpr.outputs.pull-request-number }},
+              reviewers: ['sysrio']
+            })
