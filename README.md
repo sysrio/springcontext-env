@@ -191,7 +191,7 @@ The current version is **1.0.5**
 
 - Using gradle
   ```
-  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.0.5 
+  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.0.5  
   ```
 - Using Apache Maven
   ```
