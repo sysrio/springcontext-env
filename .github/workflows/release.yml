@@ -133,7 +133,8 @@ jobs:
         with:
           title: "Prepare for next development iteration"
           commit-message: "Prepare for next development iteration"
-          branch: "auto-pr-${{ github.sha }}"
+          branch: dev
+          signoff: true
           delete-branch: false
           body: |
             Prepare for next development iteration
