@@ -19,7 +19,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Configure git
+    - name: Configure Git and GPG for non-interactive use
       shell: bash
       run: |
         # Import the GPG secret key
@@ -28,10 +28,16 @@ runs:
         # Configure GPG for non-interactive use
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        gpgconf --kill gpg-agent
 
-        # Set GPG_TTY
-        export GPG_TTY=$(tty)
+        # Restart the GPG agent
+        gpgconf --kill gpg-agent
+        gpgconf --launch gpg-agent
+
+        # Create GPG wrapper script
+        echo "#!/bin/bash
+        gpg --batch --passphrase '${{ inputs.gpg_passphrase }}' --pinentry-mode loopback \"\$@\"
+        " > ~/gpg-wrapper.sh
+        chmod +x ~/gpg-wrapper.sh
 
         # Retrieve the GPG key ID
         GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep '^sec' | awk '{print $2}' | cut -d'/' -f2)
@@ -42,7 +48,7 @@ runs:
         git config --global user.email "${{ inputs.email }}"
         git config --global commit.gpgSign true
         git config --global tag.gpgSign true
-        git config --global gpg.program gpg
+        git config --global gpg.program "~/gpg-wrapper.sh"
 
         # Verify Git configuration
         git config --list
