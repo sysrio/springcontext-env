@@ -100,10 +100,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # - name: Build and Publish
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: ./gradlew clean publish --stacktrace --no-daemon --debug --max-workers 2
+      - name: Build and Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew clean publish --stacktrace --no-daemon --debug --max-workers 2
 
       # - name: Release with JReleaser
       #   run: ./gradlew jreleaserFullRelease --no-daemon --stacktrace -x test
@@ -141,7 +141,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Request Review
-        if: steps.cpr.outputs.pull-request-number
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
