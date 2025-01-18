@@ -144,7 +144,7 @@ jreleaser {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    active = prop('jreleaser_active', 'RELEASE')
+                    active = 'NEVER'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
                 }
