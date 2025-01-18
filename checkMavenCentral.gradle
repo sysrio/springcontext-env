@@ -31,19 +31,3 @@ task checkMavenCentral {
         }
     }
 }
-
-def prop(name, defaultValue = null) {
-    def value = project.findProperty(name) ?: System.getenv(name.toUpperCase()) ?: defaultValue
-    if(value == null) {
-        GradleException(
-            """
-            Property '${name}' is not set. Please specify it in gradle.properties or as an environment variable.
-            """)
-    }
-    
-    if (name =="jreleaser_active" && project.ext.versionExistsInMavenCentral) {
-        value = "NEVER"
-    }
-
-    return value
-}
