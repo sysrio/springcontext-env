@@ -134,7 +134,7 @@ jreleaser {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    checksums = false
+                    checksums = true
                     sourceJar = true
                     javadocJar = true
                     verifyPom = true
