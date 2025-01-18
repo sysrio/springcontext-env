@@ -1,34 +1,33 @@
-import groovy.json.JsonSlurper
-import java.net.URLEncoder
+import java.net.HttpURLConnection
 
 task checkMavenCentral {
     doLast {
-        def groupId = project.group
+        def groupIdPath = project.group.replace('.', '/')
         def artifactId = project.name
         def version = project.version
 
-        def encodedGroupId = URLEncoder.encode(groupId, 'UTF-8')
-        def encodedArtifactId = URLEncoder.encode(artifactId, 'UTF-8')
-        def encodedVersion = URLEncoder.encode(version, 'UTF-8')
-        def url = "https://search.maven.org/solrsearch/select?q=g:%22${encodedGroupId}%22+AND+a:%22${encodedArtifactId}%22+AND+v:%22${encodedVersion}%22&rows=1&wt=json"
+        def artifactUrl = "https://repo1.maven.org/maven2/${groupIdPath}/${artifactId}/${version}/${artifactId}-${version}.pom"
 
-        println "Checking if version ${version} of ${groupId}:${artifactId} exists in Maven Central..."
-        def connection = new URL(url).openConnection()
-        connection.setRequestProperty("Accept", "application/json")
+        println "Checking if version ${version} of ${project.group}:${artifactId} exists in Maven Central..."
 
         try {
-            def response = connection.inputStream.text
-            def json = new JsonSlurper().parseText(response)
+            def connection = new URL(artifactUrl).openConnection() as HttpURLConnection
+            connection.requestMethod = 'HEAD'
+            connection.connect()
 
-            if (json?.response?.numFound > 0) {
+            if (connection.responseCode == 200) {
+                // Artifact exists in Maven Central
                 project.ext.versionExistsInMavenCentral = true
                 println "Version ${version} already exists in Maven Central. Skipping deployment."
             } else {
+                // Artifact does not exist
                 project.ext.versionExistsInMavenCentral = false
                 println "Version ${version} does not exist in Maven Central. Proceeding with deployment."
             }
         } catch (Exception e) {
-            throw new GradleException("Failed to check Maven Central: ${e.message}", e)
+            // Assume artifact does not exist in case of an error
+            project.ext.versionExistsInMavenCentral = false
+            println "Assuming version ${version} does not exist in Maven Central due to connection error. Proceeding with deployment."
         }
     }
 }
