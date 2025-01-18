@@ -134,10 +134,18 @@ jreleaser {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    active = 'NEVER'
+                    checksums = false
+                    sourceJar = true
+                    javadocJar = true
+                    verifyPom = true
+                    readTimeout = 180
+                    active = 'RELEASE'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
                 }
+            }
+            github {
+                active = 'ALWAYS'
             }
         }
     }
