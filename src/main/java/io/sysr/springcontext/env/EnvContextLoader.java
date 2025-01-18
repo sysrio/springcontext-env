@@ -123,7 +123,7 @@ public class EnvContextLoader {
                 setEnvFilesToLoad(dotenvPropertiesPath);
                 // Load from the ENV_DIR_PATH specifired in the dotenv.properties file
                 if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
-                    ENV_DIR_PATH = ENV_DIR_PATH.replace("\\", "\\\\");
+                    formatPath();
                     loadEnvFilesFromDirectory();
                     return;
                 }
@@ -132,8 +132,7 @@ public class EnvContextLoader {
             // Look for System.env for ENV_DIR_PATH.
             ENV_DIR_PATH = System.getenv("ENV_DIR_PATH");
             if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
-                // Replace single backslashes with double backslashes for Windows paths
-                ENV_DIR_PATH = ENV_DIR_PATH.replace("\\", "\\\\");
+                formatPath();
                 loadEnvFilesFromDirectory();
                 return;
             }
@@ -148,6 +147,15 @@ public class EnvContextLoader {
     }
 
     /**
+     * Formats the path to the directory containing the <code>.env</code> files.
+     * This is necessary for Windows paths.
+     */
+    private void formatPath() {
+        // Replace single backslashes with double backslashes for Windows paths
+        ENV_DIR_PATH = ENV_DIR_PATH.replace("\\", "\\\\");
+    }
+
+    /**
      * Loads <code>.env</code> files from the directory specified by the
      * ENV_DIR_PATH.
      *
@@ -159,7 +167,6 @@ public class EnvContextLoader {
             for (Path path : directoryStream) {
                 File file = path.toFile();
                 if (envFilesToLoad.isEmpty()) {
-                    logger.info(file.getAbsolutePath());
                     if (file.isFile() && file.getName().matches(ENV_FILE_NAME_PATTERN.pattern())) {
                         parse(path.normalize());
                         logger.info("Successfully loaded properties from {}", file.getName());
