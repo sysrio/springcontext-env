@@ -54,9 +54,9 @@ import io.sysr.springcontext.env.exception.EnvContextLoaderException;
  *
  * <p>
  * <b>Note:</b> Ensure that the dotenv properties configuration file
- * (<b>env.properties</b>) is placed in the resources foler. This only applies
- * if you have the <b>.env</b> file that contains the environment declarions is
- * placed in a custom location.
+ * (<b>dotenv.properties</b>) is placed in the resources foler. This only
+ * applies if you have the <b>.env</b> file that contains the environment
+ * declarions is placed in a custom location.
  * </p>
  *
  * @author Calvince Otieno
