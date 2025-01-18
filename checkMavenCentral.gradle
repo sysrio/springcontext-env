@@ -1,0 +1,34 @@
+import groovy.json.JsonSlurper
+import java.net.URLEncoder
+
+task checkMavenCentral {
+    doLast {
+        def groupId = project.group
+        def artifactId = project.name
+        def version = project.version
+
+        def encodedGroupId = URLEncoder.encode(groupId, 'UTF-8')
+        def encodedArtifactId = URLEncoder.encode(artifactId, 'UTF-8')
+        def encodedVersion = URLEncoder.encode(version, 'UTF-8')
+        def url = "https://search.maven.org/solrsearch/select?q=g:%22${encodedGroupId}%22+AND+a:%22${encodedArtifactId}%22+AND+v:%22${encodedVersion}%22&rows=1&wt=json"
+
+        println "Checking if version ${version} of ${groupId}:${artifactId} exists in Maven Central..."
+        def connection = new URL(url).openConnection()
+        connection.setRequestProperty("Accept", "application/json")
+
+        try {
+            def response = connection.inputStream.text
+            def json = new JsonSlurper().parseText(response)
+
+            if (json?.response?.numFound > 0) {
+                project.ext.versionExistsInMavenCentral = true
+                println "Version ${version} already exists in Maven Central. Skipping deployment."
+            } else {
+                project.ext.versionExistsInMavenCentral = false
+                println "Version ${version} does not exist in Maven Central. Proceeding with deployment."
+            }
+        } catch (Exception e) {
+            throw new GradleException("Failed to check Maven Central: ${e.message}", e)
+        }
+    }
+}

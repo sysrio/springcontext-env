@@ -123,18 +123,24 @@ publishing {
     }
 }
 
+apply from: 'checkMavenCentral.gradle'
+
+tasks.named('jreleaserFullRelease') {
+    dependsOn checkMavenCentral
+}
+
 jreleaser {
     signing {
         active = 'ALWAYS'
         armored = true
     }
-    
+
     deploy {
         maven {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    active = prop('active', 'RELEASE')
+                    active = 'RELEASE'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
                 }
