@@ -144,7 +144,7 @@ jreleaser {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    active = versionExistsInMavenCentral ? 'NEVER' : 'RELEASE'
+                    active = prop('jreleaser_active', 'RELEASE')
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
                 }
@@ -163,5 +163,12 @@ def prop(name, defaultValue = null) {
             Property '${name}' is not set. Please specify it in gradle.properties or as an environment variable.
             """)
     }
+
+    if (name == "jreleaser_active") {
+        if(versionExistsInMavenCentral) {
+            value = "NEVER"
+        }
+    }
+
     return value
 }
