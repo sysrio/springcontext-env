@@ -149,7 +149,7 @@ jobs:
                 title: 'Prepare for next development iteration',
                 owner: owner,
                 repo: repo,
-                head: context.ref,
+                head: 'dev',
                 base: 'main',
                 body: [
                   'Updated the version number for the next development iteration',
