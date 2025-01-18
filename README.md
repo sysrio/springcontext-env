@@ -17,28 +17,21 @@ There are several ways to tell the library where to look for your `.env` files:
    - If you don't specify the actual `.env` files to load, the library will, by default, load all the available files in the provided directory that start with `.env`.
    - If the filenames to be used are specified in `dotenv.properties`, then only those files will be loaded. In this case, you can name your `env` files any name you want; they don't have to be prefixed with `.env`.
 
-   **Example `dotenv.properties` file content**
+    - **Example `dotenv.properties` file content**
+      - Windows
+        ```properties
+        ENV_DIR_PATH=L:\\Lab\\apps\\configurations
+        FILE_TEST=test.config
+        FILE_PROD=prod
+        ```
+        -  **`NOTE`**: It is very important to use `\\` when defining paths on **Windows** Environment.  Otherwise you will get **`NoSuchFileException`** Error.
 
-   ```properties
-   ENV_DIR_PATH=L:\Lab\apps\config
-   FILE_1=test.config
-   FILE_2=prod
-   ```
-
-   **OR**
-
-   ```properties
-   ENV_DIR_PATH=L:\Lab\apps\config
-   FILE_A=test.config
-   FILE_B=prod
-   ```
-
-   **OR**
-
-   ```properties
-   ENV_DIR_PATH=L:\Lab\apps\config
-   FILE_NAME=.env-dev
-   ```
+      - Unix
+        ```properties
+        ENV_DIR_PATH=/home/var/configurations
+        FILE_TEST=test.config
+        FILE_PROD=prod
+        ```
 
    - Remember that file name in the `dotenv.properties` must start with **`FILE_`** followed by any letter or names you like. The variable `ENV_DIR_PATH` is case sensitive in UNIX. We recommend you maintain the uppercasing format.
 
@@ -51,12 +44,13 @@ There are several ways to tell the library where to look for your `.env` files:
    - **Examples**
      - Unix:
        ```properties
-       export ENV_DIR_PATH=/home/var/config
+       export ENV_DIR_PATH=/home/var/configurations
        ```
      - Windows:
        ```properties
-       SET ENV_DIR_PATH=L:\Lab\apps\config
+       SET ENV_DIR_PATH=L:\\Lab\\apps\\configurations
        ```
+        - **`NOTE`**: It is very important to use `\\` when defining paths on **Windows** Environment.  Otherwise you will get **`NoSuchFileException`** Error.
 
 3. **Add .env files in the project root directory**.
 

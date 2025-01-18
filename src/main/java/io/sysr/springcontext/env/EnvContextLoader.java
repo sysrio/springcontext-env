@@ -78,7 +78,7 @@ public class EnvContextLoader {
      * The directory path where the environment files are located.
      */
     private String ENV_DIR_PATH;
-    private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?\\w*$");
+    private static final Pattern ENV_FILE_NAME_PATTERN = Pattern.compile("^\\.env\\.?-?\\w*$");
     private static final Pattern VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{([^}]+)}");
     private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile("^[A-Za-z_][A-Za-z0-9_-]*$");
     private static final Pattern BAD_VARIABLE_PATTERN_MATCHER = Pattern.compile("\\$\\{\\s*\\}$|\\$\\{[^}]*$");
@@ -123,6 +123,7 @@ public class EnvContextLoader {
                 setEnvFilesToLoad(dotenvPropertiesPath);
                 // Load from the ENV_DIR_PATH specifired in the dotenv.properties file
                 if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
+                    ENV_DIR_PATH = ENV_DIR_PATH.replace("\\", "\\\\");
                     loadEnvFilesFromDirectory();
                     return;
                 }
@@ -158,14 +159,15 @@ public class EnvContextLoader {
             for (Path path : directoryStream) {
                 File file = path.toFile();
                 if (envFilesToLoad.isEmpty()) {
+                    logger.info(file.getAbsolutePath());
                     if (file.isFile() && file.getName().matches(ENV_FILE_NAME_PATTERN.pattern())) {
                         parse(path.normalize());
-                        logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                        logger.info("Successfully loaded properties from {}", file.getName());
                     }
                 } else {
                     if (file.isFile() && envFilesToLoad.contains(file.getName())) {
                         parse(path.normalize());
-                        logger.info("Successfully loaded properties from {}", path.toAbsolutePath());
+                        logger.info("Successfully loaded properties from {}", file.getName());
                     }
                 }
 
@@ -309,10 +311,10 @@ public class EnvContextLoader {
     }
 
     /**
-     * Searches for the <code>env.properties</code> file within the classpath
+     * Searches for the <code>dotenv.properties</code> file within the classpath
      * resources.
      *
-     * @return The path to the <code>env.properties</code> file if found, or
+     * @return The path to the <code>dotenv.properties</code> file if found, or
      *         {@code null} if not found.
      * @throws URISyntaxException        If the resource URL syntax is incorrect.
      * @throws IOException               If an I/O error occurs accessing the file
