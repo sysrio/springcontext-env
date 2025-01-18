@@ -6,10 +6,6 @@ plugins {
     id 'org.sonarqube' version '6.0.1.5171'
 }
 
-ext {
-    versionExistsInMavenCentral = false
-}
-
 repositories {
     mavenCentral()
 }
@@ -127,12 +123,6 @@ publishing {
     }
 }
 
-apply from: 'checkMavenCentral.gradle'
-
-tasks.named('jreleaserFullRelease') {
-    dependsOn checkMavenCentral
-}
-
 jreleaser {
     signing {
         active = 'ALWAYS'
@@ -151,6 +141,13 @@ jreleaser {
             }
         }
     }
+    
+    release {
+        github {
+            enabled = true
+        }
+    }
+
     gitRootSearch = true
     strict = true
 }
@@ -163,12 +160,5 @@ def prop(name, defaultValue = null) {
             Property '${name}' is not set. Please specify it in gradle.properties or as an environment variable.
             """)
     }
-
-    if (name == "jreleaser_active") {
-        if(versionExistsInMavenCentral) {
-            value = "NEVER"
-        }
-    }
-
     return value
 }
