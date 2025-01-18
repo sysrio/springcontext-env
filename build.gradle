@@ -6,6 +6,10 @@ plugins {
     id 'org.sonarqube' version '6.0.1.5171'
 }
 
+ext {
+    versionExistsInMavenCentral = false
+}
+
 repositories {
     mavenCentral()
 }
@@ -140,7 +144,7 @@ jreleaser {
             /* Portal Publisher API*/
             mavenCentral {
                 sonatype {
-                    active = 'RELEASE'
+                    active = versionExistsInMavenCentral ? 'NEVER' : 'RELEASE'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
                 }
