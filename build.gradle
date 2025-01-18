@@ -139,6 +139,9 @@ jreleaser {
                     javadocJar = true
                     verifyPom = true
                     readTimeout = 180
+                    connectTimeout = 180
+                    retryDelay = 30
+                    maxRetries = 99
                     active = 'RELEASE'
                     url = 'https://central.sonatype.com/api/v1/publisher'
                     stagingRepository('release/staging-deploy') 
