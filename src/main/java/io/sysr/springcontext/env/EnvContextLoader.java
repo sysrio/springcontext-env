@@ -1,6 +1,7 @@
 package io.sysr.springcontext.env;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
@@ -125,7 +126,6 @@ public class EnvContextLoader {
                 if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
                     formatPath();
                     loadEnvFilesFromDirectory();
-                    return;
                 }
             }
 
@@ -134,7 +134,6 @@ public class EnvContextLoader {
             if (Objects.nonNull(ENV_DIR_PATH) && !ENV_DIR_PATH.isBlank()) {
                 formatPath();
                 loadEnvFilesFromDirectory();
-                return;
             }
 
             // Default JVM invocation directory
@@ -142,7 +141,11 @@ public class EnvContextLoader {
             // Load from the default root directory
             loadEnvFilesFromDirectory();
         } catch (Exception e) {
-            throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
+            if (e instanceof FileNotFoundException || e instanceof NoSuchFieldException) {
+                logger.warn(e.getLocalizedMessage());
+            } else {
+                throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
+            }
         }
     }
 
@@ -180,7 +183,10 @@ public class EnvContextLoader {
 
             }
         } catch (Exception e) {
-            throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
+            if (e instanceof IOException) {
+                logger.warn("The directory path: {} is not found or is invalid.", ENV_DIR_PATH);
+            } else
+                throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -203,7 +209,10 @@ public class EnvContextLoader {
                 }
             }
         } catch (Exception e) {
-            throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
+            if (e instanceof FileNotFoundException || e instanceof NoSuchFieldException) {
+                logger.warn(e.getLocalizedMessage());
+            } else
+                throw new EnvContextLoaderException(e.getLocalizedMessage(), e);
         }
     }
 
