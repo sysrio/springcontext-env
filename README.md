@@ -181,18 +181,18 @@ The following are some of the considerations that we have made:
 
 Add the tooling to your application dependecies. The easiest way is to source from mave central repository and add to your build tool.
 
-The current version is **1.1.3**
+The current version is **1.1.4**
 
 - Using gradle
   ```
-  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.1.3     
+  implementation group: 'io.sysr', name: 'springcontext-env', version: 1.1.4      
   ```
 - Using Apache Maven
   ```
   <dependency>
      <groupId>io.sysr</groupId>
      <artifactId>springcontext-env</artifactId>
-     <version>1.1.3</version>
+     <version>1.1.4</version>
   </dependency>
   ```
 - **Remember:** For **`Spring boot`** applications, only include this library as part of your project. No additional configurations are needed. It will integrate seamlessly with your application.
